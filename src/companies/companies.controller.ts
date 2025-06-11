@@ -9,7 +9,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company ,CompanyDocument} from './schemas/company.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { ResponseMessage, User } from 'src/decorator/customize';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
 
 
@@ -18,10 +18,14 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Post()
-  create(@Body() createCompanyDto: CreateCompanyDto , @User() user: IUser) {
+  create(
+    @Body() createCompanyDto: CreateCompanyDto ,
+    @User() user: IUser
+  ) {
     return this.companiesService.create(createCompanyDto , user);
   }
 
+  @Public()
   @Get()
   @ResponseMessage('Fetch list company with pagination')
   findAll(
@@ -32,9 +36,12 @@ export class CompaniesController {
     return this.companiesService.findAll(+currentPage, +limit , qs);
   }
 
+  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(+id);
+  findOne(
+    @Param('id') id: string
+  ) {
+    return this.companiesService.findOne(id);
   }
 
   @Patch(':id')
