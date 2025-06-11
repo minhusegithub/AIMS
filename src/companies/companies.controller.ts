@@ -1,12 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller, Get, Post, Body,
+  Patch, Param, Delete, Query 
+} from '@nestjs/common';
+
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company ,CompanyDocument} from './schemas/company.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/decorator/customize';
+import { ResponseMessage, User } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
+
 
 @Controller('companies')
 export class CompaniesController {
@@ -18,8 +23,13 @@ export class CompaniesController {
   }
 
   @Get()
-  findAll() {
-    return this.companiesService.findAll();
+  @ResponseMessage('Fetch list company with pagination')
+  findAll(
+    @Query('current') currentPage: string ,
+    @Query('pageSize') limit: string,
+    @Query() qs: string
+  ){
+    return this.companiesService.findAll(+currentPage, +limit , qs);
   }
 
   @Get(':id')

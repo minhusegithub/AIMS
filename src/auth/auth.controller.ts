@@ -1,7 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Render, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Render, UseGuards, Res , Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from 'src/decorator/customize';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { LocalAuthGuard } from './local-auth.guard';
+import {  RegisterUserDto } from 'src/users/dto/create-user.dto';
+import { Request, Response } from 'express';
+import { IUser } from 'src/users/users.interface';
+ 
 
 @Controller('auth')
 export class AuthController {
@@ -13,26 +17,43 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  handleLogin( @Request() req) {
-    return this.authService.login(req.user);
+  @ResponseMessage('User login')
+  handleLogin(
+     @Req() req : Request & {user},
+     @Res({passthrough: true}) response: Response
+  ) {
+    return this.authService.login(req.user, response);
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Public()
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  @ResponseMessage('Register a new user')
+  @Post('/register')
+  handleRegister(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.register(registerUserDto);
   }
 
 
-  // @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Get user information')
+  @Get('/account')
+  handleGetAccount(@User() user: IUser) {
+    return {user};
+  }
+
   @Public()
-  @Get('profile1')
-  getProfile1(@Request() req) {
-    return req.user;
+  @ResponseMessage('Get user by refresh token')
+  @Get('/refresh')
+  handleRefreshToken(@Req() request: Request , @Res({passthrough: true}) response: Response) { 
+    const refreshToken = request.cookies['refresh_token'];
+    return this.authService.processNewToken(refreshToken , response);
   }
 
 
-
-
+  @ResponseMessage('Logout')
+  @Post('/logout')
+  handleLogout(
+    @Res({passthrough: true}) response: Response,
+    @User() user: IUser
+  ) {
+    return this.authService.logout(response, user);
+  }
 }
