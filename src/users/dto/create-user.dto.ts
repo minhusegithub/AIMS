@@ -1,6 +1,6 @@
 // data transfer object
 import { Type } from 'class-transformer';
-import { IsEmail, isNotEmpty, IsNotEmpty, IsNotEmptyObject, IsObject, IsString, ValidateNested } from 'class-validator';
+import { IsEmail, IsMongoId, isNotEmpty, IsNotEmpty, IsNotEmptyObject, IsObject, IsString, ValidateNested } from 'class-validator';
 
 class Company {
     @IsNotEmpty()
@@ -32,6 +32,7 @@ export class CreateUserDto {
     address: string;
 
     @IsNotEmpty({message: 'Vai trò không được để trống'})
+    @IsMongoId({message: 'Vai trò có định dạng là mongo id'})
     role: string;
     
     @IsNotEmptyObject()
