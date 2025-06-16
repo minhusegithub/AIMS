@@ -2,13 +2,6 @@
 import { Type } from 'class-transformer';
 import { IsEmail, IsMongoId, isNotEmpty, IsNotEmpty, IsNotEmptyObject, IsObject, IsString, ValidateNested } from 'class-validator';
 
-class Company {
-    @IsNotEmpty()
-    _id: string;
-
-    @IsNotEmpty({message: 'Tên công ty không được để trống'})
-    name: string;
-}
 
 export class CreateUserDto {
 
@@ -32,15 +25,7 @@ export class CreateUserDto {
     address: string;
 
     @IsNotEmpty({message: 'Vai trò không được để trống'})
-    @IsMongoId({message: 'Vai trò có định dạng là mongo id'})
     role: string;
-    
-    @IsNotEmptyObject()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => Company)
-    company: Company;
-
 
 
 }
@@ -65,6 +50,18 @@ export class RegisterUserDto {
     @IsNotEmpty({message: 'Địa chỉ không được để trống'})
     address: string;
 
-
+    @IsNotEmpty({message: 'Vai trò không được để trống'})
+    role: string;
 }
 
+export class LoginUserDto {
+    @IsEmail({},{message: 'Email không đúng định dạng'})
+    @IsNotEmpty({message: 'Email không được để trống'})
+    email: string;
+
+    @IsNotEmpty({message: 'Mật khẩu không được để trống'})
+    password: string;
+
+    // @IsNotEmpty({message: 'Vai trò không được để trống'})
+    // role: string;
+}
