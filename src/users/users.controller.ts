@@ -11,7 +11,10 @@ export class UsersController {
 
   @Post()
   @ResponseMessage('Create a new user')
-  async create( @Body() createUserDto: CreateUserDto , @User() user: IUser) {
+  async create(
+    @Body() createUserDto: CreateUserDto ,
+    @User() user: IUser
+    ) {
     let newUser = await this.usersService.create(createUserDto , user);
     return {
       _id: newUser?._id,
@@ -26,27 +29,35 @@ export class UsersController {
     @Query('pageSize') limit: string,
     @Query() qs: string
   ) {
-    console.log(">>>>>>>>>>       ", currentPage, limit, qs);
+    
     return this.usersService.findAll(+currentPage, +limit, qs);
   }
 
   @Get(':id')
   @ResponseMessage('Fetch a user by id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string
+  ) {
     const foundUser = await this.usersService.findOne(id);
     return foundUser;
   }
 
   @ResponseMessage('Update a user')
   @Patch()
-  async update(@Body() updateUserDto: UpdateUserDto , @User() user: IUser) {
+  async update(
+    @Body() updateUserDto: UpdateUserDto ,
+    @User() user: IUser
+  ) {
     let updatedUser = await this.usersService.update( updateUserDto, user);
     return updatedUser;
   }
 
   @Delete(':id')
   @ResponseMessage('Delete a user')
-  remove(@Param('id') id: number , @User() user: IUser) {
+  remove(
+    @Param('id') id: number ,
+    @User() user: IUser
+  ) {
     return this.usersService.remove(id, user);
   }
 }

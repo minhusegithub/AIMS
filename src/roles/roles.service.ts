@@ -70,7 +70,7 @@ export class RolesService {
 
 
   async findOne(id: string) {
-    if(mongoose.Types.ObjectId.isValid(id)) {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('not found role');
     }
     return await this.roleModel.findById(id)
@@ -87,7 +87,7 @@ export class RolesService {
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto, user: IUser) {
-    if(mongoose.Types.ObjectId.isValid(id)) {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('not found role');
     }
 

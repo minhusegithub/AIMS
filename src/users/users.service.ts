@@ -113,6 +113,13 @@ export class UsersService {
       select: {
         name: 1,
         _id: 1,
+      },
+      populate: {
+        path: "permissions",
+        select: {
+          name: 1,
+          _id: 1
+        }
       }
     });
   }

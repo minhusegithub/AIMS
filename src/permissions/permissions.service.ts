@@ -72,14 +72,14 @@ export class PermissionsService {
   }
 
   async findOne(id: string) {
-    if(mongoose.Types.ObjectId.isValid(id)) {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('not found permission');
     }
     return await this.permissionModel.findById(id);
   }
 
   async update(id: string, updatePermissionDto: UpdatePermissionDto, user: IUser) {
-    if(mongoose.Types.ObjectId.isValid(id)) {
+    if(!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('not found permission');
     }
 
