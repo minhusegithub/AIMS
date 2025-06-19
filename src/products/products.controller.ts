@@ -10,7 +10,6 @@ export class ProductsController {
 
   //Create a new product
   @Post()
-  @ResponseMessage('Create a new product')
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
@@ -18,7 +17,6 @@ export class ProductsController {
 
   //Get all products
   @Get()
-  @ResponseMessage('Fetch products with pagination')
   findAll(
     @Query('current') currentPage: string ,
     @Query('pageSize') limit: string,
@@ -31,7 +29,6 @@ export class ProductsController {
 
   //Get a product by id
   @Get(':id')
-  @ResponseMessage('Fetch a product by id')
   findOne(
     @Param('id') id: string
   ) {
@@ -40,7 +37,6 @@ export class ProductsController {
 
   //Update a product
   @Patch(':id')
-  @ResponseMessage('Update a product by id')
   update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto) {
@@ -49,7 +45,6 @@ export class ProductsController {
 
   //Delete a product
   @Delete(':id')
-  @ResponseMessage('Delete a product by id')
   remove(
     @Param('id') id: string
   ) {
