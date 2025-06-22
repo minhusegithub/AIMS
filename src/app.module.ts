@@ -4,11 +4,11 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
-import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
 import { ProductsModule } from './products/products.module';
 import { CartsModule } from './carts/carts.module';
 import { OrdersModule } from './orders/orders.module';
-
+import { VnpayModule } from './vnpay/vnpay.module';
+import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
 
 @Module({
   imports: [
@@ -19,37 +19,22 @@ import { OrdersModule } from './orders/orders.module';
         connectionFactory: (connection) => {
           connection.plugin(softDeletePlugin);
           return connection;
-        }
+        },
       }),
       inject: [ConfigService],
     }),
 
-
     ConfigModule.forRoot({
       isGlobal: true,
-      
     }),
-
 
     UsersModule,
     ProductsModule,
     CartsModule,
     OrdersModule,
-   
-
-
+    VnpayModule, 
   ],
   controllers: [AppController],
-  providers: [AppService ,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // }
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
-
-
-
-
-
