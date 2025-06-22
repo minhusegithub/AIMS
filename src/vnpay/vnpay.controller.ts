@@ -6,9 +6,12 @@ import { Response } from 'express';
 export class VnpayController {
   constructor(private readonly vnpayService: VnpayService) {}
 
-  @Post('create-payment-url')
-  createPaymentUrl(@Body() body) {
-    return this.vnpayService.createPaymentUrl(body);
+  @Get('create-payment-url')
+  createPaymentUrl(
+   
+    @Query('orderId') orderId: string,
+  ) {
+    return this.vnpayService.createPaymentUrl( orderId);
   }
 
   @Get('return')
