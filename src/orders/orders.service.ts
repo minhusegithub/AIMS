@@ -106,9 +106,9 @@ export class OrdersService {
   
 
   async findOne(id: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found order";
-    }
+    // if(!mongoose.Types.ObjectId.isValid(id)){
+    //   return "not found order";
+    // }
     const order = await this.orderModel.findOne({_id: id})
       .populate({
         path: 'cartId',
@@ -125,7 +125,7 @@ export class OrdersService {
       });
     
     if (!order) {
-      return "not found order";
+      return "not found order xxx";
     }
 
     
