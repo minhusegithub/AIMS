@@ -23,28 +23,16 @@ import { Role } from 'src/roles/roles.enum';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // create a new user (admin only)
-  @Post()
-  @Roles(Role.Admin)
-  @ResponseMessage('Create a new user')
-  async create(@Body() createUserDto: CreateUserDto) {
-    let newUser = await this.usersService.create(createUserDto);
-    return {
-      _id: newUser?._id,
-      createdAt: newUser?.createdAt,
-    };
-  }
-
   // register a new user (anyone)
-  @Post('register')
-  @ResponseMessage('Register a new user')
-  async register(@Body() registerUserDto: RegisterUserDto) {
-    let newUser = await this.usersService.register(registerUserDto);
-    return {
-      _id: newUser?._id,
-      createdAt: newUser?.createdAt,
-    };
-  }
+@Post('register')
+@ResponseMessage('Register a new user')
+async register(@Body() createUserDto: CreateUserDto) {
+  const newUser = await this.usersService.create(createUserDto);
+  return {
+    _id: newUser?._id,
+    createdAt: newUser?.createdAt,
+  };
+}
 
   // login a user (anyone)
   @Post('login')
