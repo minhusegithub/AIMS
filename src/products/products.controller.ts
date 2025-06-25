@@ -58,4 +58,28 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
+
+  //Get products sort by price with option
+  @Post('sort-by-price')
+  sortByPrice(
+    @Query('option') option: string,
+  ) {
+    return this.productsService.sortByPrice(option);
+  }
+
+  //Get products sort by title with option
+  @Post('sort-by-title')
+  sortByTitle(
+    @Query('option') option: string,
+  ) {
+    return this.productsService.sortByTitle(option);
+  }
+
+  @Post('search-by-title')
+  searchByTitle(
+    @Query('title') title: string,
+  ) {
+    return this.productsService.searchByTitle(title);
+  }
+
 }
