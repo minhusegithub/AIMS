@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional, IsUrl } from "class-validator";
 
 export class CreateProductDto {
     @IsNotEmpty({message: 'Tên sản phẩm không được để trống'})
@@ -13,5 +13,7 @@ export class CreateProductDto {
     @IsNotEmpty({message: 'Số lượng sản phẩm không được để trống'})
     stock: number;
 
-    
+    @IsOptional()
+    @IsUrl({}, {message: 'URL hình ảnh không hợp lệ'})
+    thumbnail?: string;
 }

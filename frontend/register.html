@@ -55,6 +55,10 @@
     .btn-submit:hover {
       background-color: #388e3c;
     }
+    .btn-submit:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
     .login-link {
       text-align: center;
       margin-top: 15px;
@@ -63,6 +67,18 @@
       color: #2196f3;
       text-decoration: none;
       font-weight: 500;
+    }
+    .error-message {
+      color: #f44336;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .success-message {
+      color: #4caf50;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -108,19 +124,22 @@
         <select id="role" required>
           <option value="">--Chọn vai trò--</option>
           <option value="customer">Khách hàng</option>
-          <option value="product_manager">Quản lý sản phẩm</option>
           <option value="admin">Quản trị viên</option>
         </select>
       </div>
       <button type="submit" class="btn-submit">Đăng ký</button>
     </form>
+    <div id="message"></div>
     <div class="login-link">
       Đã có tài khoản? <a href="login.html">Đăng nhập</a>
     </div>
   </div>
+  
+  <script src="js/auth.js"></script>
   <script>
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -129,28 +148,52 @@
       const gender = document.getElementById('gender').value;
       const address = document.getElementById('address').value;
       const role = document.getElementById('role').value;
+      const messageDiv = document.getElementById('message');
+      const submitBtn = document.querySelector('.btn-submit');
 
       if (password !== confirm) {
-        alert('Mật khẩu không khớp');
+        messageDiv.innerHTML = '<div class="error-message">Mật khẩu không khớp</div>';
         return;
       }
+
+      // Disable button và hiển thị loading
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang đăng ký...';
+      messageDiv.innerHTML = '';
 
       try {
         const res = await fetch('http://localhost:8000/v1/users/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name,email, password, age, gender, address, role })
+          credentials: 'include',
+          body: JSON.stringify({ name, email, password, age, gender, address, role })
         });
+        
         const data = await res.json();
 
         if (res.ok) {
-          alert('Đăng ký thành công!');
-          window.location.href = 'login.html';
+          // Lưu access token nếu có
+          if (data.accessToken) {
+            window.authManager.setAccessToken(data.accessToken);
+          }
+          
+          // Hiển thị thông báo thành công
+          messageDiv.innerHTML = '<div class="success-message">Đăng ký thành công! Đang chuyển hướng...</div>';
+          
+          // Chuyển hướng về trang chủ sau 1 giây
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000);
         } else {
-          alert(data.message || 'Đăng ký thất bại');
+          messageDiv.innerHTML = `<div class="error-message">${data.message || 'Đăng ký thất bại'}</div>`;
         }
       } catch (err) {
-        alert('Lỗi khi kết nối tới máy chủ');
+        messageDiv.innerHTML = '<div class="error-message">Lỗi khi kết nối tới máy chủ</div>';
+        console.error('Lỗi đăng ký:', err);
+      } finally {
+        // Enable lại button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng ký';
       }
     });
   </script>

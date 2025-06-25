@@ -55,6 +55,10 @@
     .btn-submit:hover {
       background-color: #1976d2;
     }
+    .btn-submit:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
     .register-link {
       text-align: center;
       margin-top: 15px;
@@ -63,6 +67,18 @@
       color: #2196f3;
       text-decoration: none;
       font-weight: 500;
+    }
+    .error-message {
+      color: #f44336;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .success-message {
+      color: #4caf50;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -80,33 +96,58 @@
       </div>
       <button type="submit" class="btn-submit">Đăng nhập</button>
     </form>
+    <div id="message"></div>
     <div class="register-link">
       Chưa có tài khoản? <a href="register.html">Đăng ký</a>
     </div>
   </div>
+  
+  <script src="js/auth.js"></script>
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+      const submitBtn = document.querySelector('.btn-submit');
+      
+      // Disable button và hiển thị loading
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang đăng nhập...';
+      messageDiv.innerHTML = '';
 
       try {
         const res = await fetch('http://localhost:8000/v1/users/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ email, password })
         });
+        
         const data = await res.json();
 
         if (res.ok) {
-          localStorage.setItem('accessToken', data.accessToken);
-          alert('Đăng nhập thành công!');
-          window.location.href = 'index.html';
+          // Lưu access token
+          window.authManager.setAccessToken(data.accessToken);
+          
+          // Hiển thị thông báo thành công
+          messageDiv.innerHTML = '<div class="success-message">Đăng nhập thành công! Đang chuyển hướng...</div>';
+          
+          // Chuyển hướng về trang chủ sau 1 giây
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000);
         } else {
-          alert(data.message || 'Đăng nhập thất bại');
+          messageDiv.innerHTML = `<div class="error-message">${data.message || 'Đăng nhập thất bại'}</div>`;
         }
       } catch (err) {
-        alert('Lỗi khi kết nối tới máy chủ');
+        messageDiv.innerHTML = '<div class="error-message">Lỗi khi kết nối tới máy chủ</div>';
+        console.error('Lỗi đăng nhập:', err);
+      } finally {
+        // Enable lại button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng nhập';
       }
     });
   </script>

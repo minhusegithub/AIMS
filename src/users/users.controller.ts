@@ -7,7 +7,11 @@ import {
   Param,
   Delete,
   Query,
+  Res,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { Response, Request } from 'express';
 import { UsersService } from './users.service';
 import {
   CreateUserDto,
@@ -15,31 +19,78 @@ import {
   RegisterUserDto,
 } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ResponseMessage } from 'src/decorator/customize';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from 'src/roles/roles.enum';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { CurrentUser } from './user.decorator';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+  ) {}
 
   // register a new user (anyone)
-@Post('register')
-@ResponseMessage('Register a new user')
-async register(@Body() createUserDto: CreateUserDto) {
-  const newUser = await this.usersService.create(createUserDto);
-  return {
-    _id: newUser?._id,
-    createdAt: newUser?.createdAt,
-  };
-}
+  @Post('register')
+  @ResponseMessage('Register a new user')
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.usersService.registerWithCookie(createUserDto, res);
+  }
 
   // login a user (anyone)
   @Post('login')
   @ResponseMessage('Login a user')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    let user = await this.usersService.login(loginUserDto);
-    return user;
+  async login(
+    @Body() loginUserDto: LoginUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.usersService.loginWithCookie(loginUserDto, res);
+  }
+
+  // logout user
+  @Post('logout')
+  @ResponseMessage('Logout user')
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies?.refreshToken;
+    return this.usersService.logoutWithCookie(refreshToken, res);
+  }
+
+  // refresh token
+  @Post('refresh')
+  @ResponseMessage('Refresh access token')
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies?.refreshToken;
+    return this.usersService.refreshTokenWithCookie(refreshToken, res);
+  }
+
+  // get current user profile (authenticated users)
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Get current user profile')
+  async getProfile(@CurrentUser() user: any) {
+    return this.usersService.findOne(user.userId);
+  }
+
+  // update current user profile (authenticated users)
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Update current user profile')
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.userId, updateProfileDto);
   }
 
   // get all users (admin only)
@@ -59,8 +110,7 @@ async register(@Body() createUserDto: CreateUserDto) {
   @Roles(Role.Admin)
   @ResponseMessage('Fetch a user by id')
   async findOne(@Param('id') id: string) {
-    const foundUser = await this.usersService.findOne(id);
-    return foundUser;
+    return this.usersService.findOne(id);
   }
 
   // update a user (admin only)
@@ -68,8 +118,7 @@ async register(@Body() createUserDto: CreateUserDto) {
   @Roles(Role.Admin)
   @ResponseMessage('Update a user')
   async update(@Body() updateUserDto: UpdateUserDto) {
-    let updatedUser = await this.usersService.update(updateUserDto);
-    return updatedUser;
+    return this.usersService.update(updateUserDto);
   }
 
   // delete a user (admin only)
