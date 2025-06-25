@@ -84,4 +84,28 @@ export class ProductsService {
     }
     return await this.productModel.softDelete({_id: id});
   }
+
+  // sort by price
+  async sortByPrice(option: string) {
+    // Chuyển đổi giá trị By về 1 hoặc -1
+    const sortValue = option === 'desc' ? -1 : 1;
+    const products = await this.productModel.find().sort({price: sortValue});
+    return products;
+  }
+
+   // sort by price
+  async sortByTitle(option: string) {
+    // Chuyển đổi giá trị By về 1 hoặc -1
+    const sortValue = option === 'desc' ? -1 : 1;
+    const products = await this.productModel.find().sort({ title: sortValue });
+    return products;
+  }
+
+  // search by title
+  async searchByTitle(title: string) {
+    const products = await this.productModel.find({title: {$regex: title, $options: 'i'}});
+    return products;
+  }
+
+
 }
