@@ -10,7 +10,6 @@ import { Product, ProductDocument } from 'src/products/schemas/product.schema';
 @Injectable()
 export class CartsService {
 
-
   constructor(
     @InjectModel(Cart.name) private cartModel: SoftDeleteModel<CartDocument>,
     @InjectModel(Product.name) private productModel: SoftDeleteModel<ProductDocument>,
@@ -41,7 +40,72 @@ export class CartsService {
     return cart;
   }
 
-  
+  // get user's cart
+  async getUserCart(userId: string) {
+    let cart = await this.cartModel.findOne({ userId })
+      .populate('userId', '_id name email age gender address role')
+      .populate({
+        path: 'products.productId',
+        select: '_id title price thumbnail'
+      });
+
+    // Nếu user chưa có giỏ hàng, tạo mới
+    if (!cart) {
+      cart = await this.cartModel.create({
+        userId,
+        products: []
+      });
+    }
+
+    return cart;
+  }
+
+  // add product to user's cart
+  async addProductToUserCart(userId: string, productId: string, quantity: number) {
+    // Kiểm tra sản phẩm có tồn tại không
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // Tìm hoặc tạo giỏ hàng cho user
+    let cart = await this.cartModel.findOne({ userId });
+    if (!cart) {
+      cart = await this.cartModel.create({
+        userId,
+        products: []
+      });
+    }
+
+    // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
+    const existingProductIndex = cart.products.findIndex(
+      item => item.productId.toString() === productId
+    );
+    
+    if (existingProductIndex !== -1) {
+      // Nếu sản phẩm đã tồn tại, cập nhật số lượng
+      cart.products[existingProductIndex].quantity += quantity;
+    } else {
+      // Nếu sản phẩm chưa tồn tại, thêm mới vào giỏ hàng
+      cart.products.push({
+        productId: product._id,
+        quantity: quantity
+      });
+    }
+
+    // Lưu giỏ hàng đã cập nhật
+    await cart.save();
+
+    // Populate thông tin sản phẩm trước khi trả về
+    const updatedCart = await this.cartModel.findById(cart._id)
+      .populate('userId', '_id name email age gender address role')
+      .populate({
+        path: 'products.productId',
+        select: '_id title price thumbnail'
+      });
+
+    return updatedCart;
+  }
 
   // add to cart
   async addToCart(id: string, productId: string, quantity: number) {
@@ -82,7 +146,6 @@ export class CartsService {
     return updatedCart;
   }
 
-
   // delete a cart
   async remove(id: string) {
     if(!mongoose.Types.ObjectId.isValid(id)){
@@ -90,8 +153,4 @@ export class CartsService {
     }
     return await this.cartModel.softDelete({_id: id});
   }
-
-
-
-
 }

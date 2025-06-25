@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,10 +15,32 @@ export class ProductsService {
 
   // create a new product
   async create(createProductDto: CreateProductDto) {
-    const {title, description, price, stock} = createProductDto;
+    const {title, description, price, stock, thumbnail} = createProductDto;
 
-    const newProduct = await this.productModel.create({title, description, price, stock});
-    return newProduct;
+    // Validate input
+    if (price < 0) {
+      throw new BadRequestException('Giá sản phẩm không được âm');
+    }
+    if (stock < 0) {
+      throw new BadRequestException('Số lượng tồn kho không được âm');
+    }
+    if (!title || title.trim().length === 0) {
+      throw new BadRequestException('Tên sản phẩm không được để trống');
+    }
+
+    const newProduct = await this.productModel.create({
+      title: title.trim(),
+      description: description?.trim() || '',
+      price,
+      stock,
+      thumbnail: thumbnail || 'https://via.placeholder.com/200x180'
+    });
+    
+    return {
+      success: true,
+      message: 'Tạo sản phẩm thành công',
+      data: newProduct
+    };
   }
 
   // get all products
@@ -56,33 +78,236 @@ export class ProductsService {
   // get a product by id
   async findOne(id: string) {
     if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found product";
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
     }
     const product = await this.productModel.findOne({_id: id});
     if(!product){
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Không tìm thấy sản phẩm');
     }
-    return product;
+    return {
+      success: true,
+      data: product
+    };
   }
 
   // update a product
   async update(id: string, updateProductDto: UpdateProductDto) {
     if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found product";
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
     }
-    const product = await this.productModel.updateOne({_id: id}, updateProductDto);
-    if(!product){
-      throw new NotFoundException('Product not found');
+
+    // Validate input
+    if (updateProductDto.price !== undefined && updateProductDto.price < 0) {
+      throw new BadRequestException('Giá sản phẩm không được âm');
     }
-    return product;
+    if (updateProductDto.stock !== undefined && updateProductDto.stock < 0) {
+      throw new BadRequestException('Số lượng tồn kho không được âm');
+    }
+    if (updateProductDto.title !== undefined && (!updateProductDto.title || updateProductDto.title.trim().length === 0)) {
+      throw new BadRequestException('Tên sản phẩm không được để trống');
+    }
+
+    // Check if product exists
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (updateProductDto.title !== undefined) {
+      updateData.title = updateProductDto.title.trim();
+    }
+    if (updateProductDto.description !== undefined) {
+      updateData.description = updateProductDto.description.trim();
+    }
+    if (updateProductDto.price !== undefined) {
+      updateData.price = updateProductDto.price;
+    }
+    if (updateProductDto.stock !== undefined) {
+      updateData.stock = updateProductDto.stock;
+    }
+    if (updateProductDto.thumbnail !== undefined) {
+      updateData.thumbnail = updateProductDto.thumbnail;
+    }
+
+    // Update product
+    const result = await this.productModel.updateOne({_id: id}, updateData);
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    // Get updated product
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật sản phẩm thành công',
+      data: updatedProduct
+    };
+  }
+
+  // Update product stock
+  async updateStock(id: string, stock: number) {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
+    }
+
+    if (stock < 0) {
+      throw new BadRequestException('Số lượng tồn kho không được âm');
+    }
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.updateOne({_id: id}, { stock });
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật tồn kho thành công',
+      data: updatedProduct
+    };
+  }
+
+  // Update product price
+  async updatePrice(id: string, price: number) {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
+    }
+
+    if (price < 0) {
+      throw new BadRequestException('Giá sản phẩm không được âm');
+    }
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.updateOne({_id: id}, { price });
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật giá thành công',
+      data: updatedProduct
+    };
+  }
+
+  // Update product title
+  async updateTitle(id: string, title: string) {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
+    }
+
+    if (!title || title.trim().length === 0) {
+      throw new BadRequestException('Tên sản phẩm không được để trống');
+    }
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.updateOne({_id: id}, { title: title.trim() });
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật tên sản phẩm thành công',
+      data: updatedProduct
+    };
+  }
+
+  // Update product description
+  async updateDescription(id: string, description: string) {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
+    }
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.updateOne({_id: id}, { description: description?.trim() || '' });
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật mô tả thành công',
+      data: updatedProduct
+    };
+  }
+
+  // Update product thumbnail
+  async updateThumbnail(id: string, thumbnail: string) {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
+    }
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.updateOne({_id: id}, { thumbnail });
+    
+    if(result.modifiedCount === 0) {
+      throw new BadRequestException('Không có thay đổi nào được cập nhật');
+    }
+
+    const updatedProduct = await this.productModel.findOne({_id: id});
+    
+    return {
+      success: true,
+      message: 'Cập nhật hình ảnh thành công',
+      data: updatedProduct
+    };
   }
 
   // delete a product
   async remove(id: string) {
     if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found product";
+      throw new NotFoundException('ID sản phẩm không hợp lệ');
     }
-    return await this.productModel.softDelete({_id: id});
+
+    const existingProduct = await this.productModel.findOne({_id: id});
+    if(!existingProduct){
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const result = await this.productModel.softDelete({_id: id});
+    
+    return {
+      success: true,
+      message: 'Xóa sản phẩm thành công',
+      data: result
+    };
   }
 
   // sort by price
@@ -90,7 +315,10 @@ export class ProductsService {
     // Chuyển đổi giá trị By về 1 hoặc -1
     const sortValue = option === 'desc' ? -1 : 1;
     const products = await this.productModel.find().sort({price: sortValue});
-    return products;
+    return {
+      success: true,
+      data: products
+    };
   }
 
    // sort by price
@@ -98,14 +326,76 @@ export class ProductsService {
     // Chuyển đổi giá trị By về 1 hoặc -1
     const sortValue = option === 'desc' ? -1 : 1;
     const products = await this.productModel.find().sort({ title: sortValue });
-    return products;
+    return {
+      success: true,
+      data: products
+    };
   }
 
   // search by title
   async searchByTitle(title: string) {
-    const products = await this.productModel.find({title: {$regex: title, $options: 'i'}});
-    return products;
+    if (!title || title.trim().length === 0) {
+      throw new BadRequestException('Từ khóa tìm kiếm không được để trống');
+    }
+
+    const products = await this.productModel.find({
+      title: {$regex: title.trim(), $options: 'i'}
+    });
+    
+    return {
+      success: true,
+      data: products,
+      total: products.length
+    };
   }
 
+  // Get products by stock status
+  async getProductsByStockStatus(status: 'in-stock' | 'out-of-stock' | 'low-stock') {
+    let filter: any = {};
+    
+    switch (status) {
+      case 'in-stock':
+        filter.stock = { $gt: 10 };
+        break;
+      case 'out-of-stock':
+        filter.stock = 0;
+        break;
+      case 'low-stock':
+        filter.stock = { $gt: 0, $lte: 10 };
+        break;
+      default:
+        throw new BadRequestException('Trạng thái tồn kho không hợp lệ');
+    }
 
+    const products = await this.productModel.find(filter);
+    
+    return {
+      success: true,
+      data: products,
+      total: products.length
+    };
+  }
+
+  // Get product statistics
+  async getProductStats() {
+    const totalProducts = await this.productModel.countDocuments();
+    const inStockProducts = await this.productModel.countDocuments({ stock: { $gt: 0 } });
+    const outOfStockProducts = await this.productModel.countDocuments({ stock: 0 });
+    const lowStockProducts = await this.productModel.countDocuments({ stock: { $gt: 0, $lte: 10 } });
+
+    const avgPrice = await this.productModel.aggregate([
+      { $group: { _id: null, avgPrice: { $avg: '$price' } } }
+    ]);
+
+    return {
+      success: true,
+      data: {
+        totalProducts,
+        inStockProducts,
+        outOfStockProducts,
+        lowStockProducts,
+        averagePrice: avgPrice[0]?.avgPrice || 0
+      }
+    };
+  }
 }

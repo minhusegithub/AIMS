@@ -27,6 +27,8 @@ export class User {
     @Prop()
     role: string;
 
+    @Prop()
+    refreshToken: string;
 
     @Prop()
     createdAt: Date;
@@ -39,9 +41,6 @@ export class User {
 
     @Prop()
     deletedAt: Date;
-
-
-    
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

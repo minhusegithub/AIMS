@@ -26,7 +26,7 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles(Role.Admin, Role.ProductManager)
+  @Roles(Role.Admin)
   findAll(
     @Query('current') currentPage: string,
     @Query('pageSize') limit: string,
@@ -41,7 +41,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
-  @Roles(Role.Admin, Role.ProductManager)
+  @Roles(Role.Admin)
   update(
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
@@ -50,7 +50,7 @@ export class OrdersController {
   }
 
   @Patch('update-status/:id')
-  @Roles(Role.Admin, Role.ProductManager)
+  @Roles(Role.Admin)
   updateStatus(
     @Param('id') id: string,
     @Query('status') status: string,
@@ -68,7 +68,7 @@ export class OrdersController {
   }
 
   @Delete(':id')
-  @Roles(Role.Admin, Role.ProductManager)
+  @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.ordersService.remove(+id);
   }
