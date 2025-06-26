@@ -20,6 +20,30 @@
         Xóa tìm kiếm
       </button>
     </div>
+    <div class="filter-container">
+      <div class="filter-group">
+        <label for="priceSort">Lọc theo giá:</label>
+        <select id="priceSort" onchange="productManager.sortByPrice()">
+          <option value="">-- Chọn sắp xếp --</option>
+          <option value="asc">Giá tăng dần</option>
+          <option value="desc">Giá giảm dần</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="titleSort">Lọc theo tiêu đề:</label>
+        <select id="titleSort" onchange="productManager.sortByTitle()">
+          <option value="">-- Chọn sắp xếp --</option>
+          <option value="asc">A-Z</option>
+          <option value="desc">Z-A</option>
+        </select>
+      </div>
+      <div class="admin-actions" id="adminActions" style="display: none;">
+        <button class="btn-add-product" onclick="productManager.showAddProductForm()">
+          <span class="btn-icon">➕</span>
+          Thêm sản phẩm
+        </button>
+      </div>
+    </div>
     <div class="auth-buttons" id="authButtons">
       <button onclick="location.href='login.html'">Đăng nhập</button>
       <button onclick="location.href='register.html'">Đăng ký</button>
@@ -36,6 +60,9 @@
     <div class="search-results" id="searchResults" style="display: none;">
       <h3>Kết quả tìm kiếm cho: "<span id="searchTerm"></span>"</h3>
       <p>Tìm thấy <span id="resultCount">0</span> sản phẩm</p>
+    </div>
+    <div class="sort-results" id="sortInfo" style="display: none;">
+      <!-- Thông tin sắp xếp sẽ được load từ JS -->
     </div>
     <div class="product-grid" id="productGrid">
       <!-- Sản phẩm sẽ được render từ JS -->
@@ -55,7 +82,21 @@
     </div>
   </div>
 
+  <!-- Product  Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Thông tin sản phẩm</h2>
+        <span class="close" onclick="closeProductModal()">&times;</span>
+      </div>
+      <div id="productModalContent">
+        <!-- Nội dung sẽ được load từ JS -->
+      </div>
+    </div>
+  </div>
+
   <script src="js/auth.js"></script>
+  <script src="js/product.js"></script>
   <script>
     let currentSearchTerm = '';
     let isSearching = false;
@@ -63,7 +104,8 @@
     // Kiểm tra trạng thái đăng nhập và load sản phẩm khi trang load
     document.addEventListener("DOMContentLoaded", async () => {
       await checkAuthStatus();
-      await loadProducts();
+      await productManager.loadProducts();
+      productManager.updateAdminUI(); // Cập nhật UI admin
       
       // Thêm event listener cho Enter key trong search input
       document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -89,166 +131,17 @@
 
     // Tìm kiếm sản phẩm
     async function searchProducts() {
-      const searchInput = document.getElementById('searchInput');
-      const searchTerm = searchInput.value.trim();
-      
-      if (!searchTerm) {
-        alert('Vui lòng nhập từ khóa tìm kiếm!');
-        return;
-      }
-
-      currentSearchTerm = searchTerm;
-      isSearching = true;
-      
-      try {
-        const res = await fetch(`http://localhost:8000/v1/products/search?title=${encodeURIComponent(searchTerm)}`);
-        const data = await res.json();
-        
-        if (data.success) {
-          displaySearchResults(data.result, searchTerm);
-        } else {
-          alert('Có lỗi xảy ra khi tìm kiếm!');
-        }
-      } catch (err) {
-        console.error('Lỗi tìm kiếm:', err);
-        alert('Không thể kết nối đến server!');
-      }
-    }
-
-    // Hiển thị kết quả tìm kiếm
-    function displaySearchResults(products, searchTerm) {
-      const grid = document.getElementById("productGrid");
-      const searchResults = document.getElementById("searchResults");
-      const searchTermSpan = document.getElementById("searchTerm");
-      const resultCount = document.getElementById("resultCount");
-      const clearSearchBtn = document.getElementById("clearSearchBtn");
-
-      // Hiển thị thông tin tìm kiếm
-      searchResults.style.display = 'block';
-      searchTermSpan.textContent = searchTerm;
-      resultCount.textContent = products.length;
-      clearSearchBtn.style.display = 'inline-block';
-
-      // Render sản phẩm
-      grid.innerHTML = "";
-      
-      if (products.length === 0) {
-        grid.innerHTML = `
-          <div class="no-results">
-            <p>Không tìm thấy sản phẩm nào phù hợp với từ khóa "${searchTerm}"</p>
-            <button onclick="clearSearch()" class="btn-primary">Quay lại tất cả sản phẩm</button>
-          </div>
-        `;
-        return;
-      }
-
-      products.forEach(p => {
-        const card = document.createElement("div");
-        card.className = "product-card";
-        card.setAttribute('data-product-id', p._id);
-        card.innerHTML = `
-          <div class="product-image-container">
-            <img src="${p.thumbnail || 'https://via.placeholder.com/200x180'}" alt="Product">
-            <div class="product-overlay">
-              <div class="product-stock-badge ${p.stock > 0 ? 'in-stock' : 'out-of-stock'}">
-                ${p.stock > 0 ? 'Còn hàng' : 'Hết hàng'}
-              </div>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3 class="product-title">${p.title}</h3>
-            <div class="product-price">${p.price.toLocaleString()} USD</div>
-            <div class="product-description">${p.description || 'Không có mô tả'}</div>
-            <div class="product-stock-info">
-              <span class="stock-label">Tồn kho:</span>
-              <span class="stock-value ${p.stock > 10 ? 'high' : p.stock > 0 ? 'medium' : 'low'}">${p.stock} sản phẩm</span>
-            </div>
-          </div>
-          <div class="product-actions">
-            <button class="btn-detail" onclick="viewProductDetail('${p._id}')">
-              <span class="btn-icon">👁️</span>
-              Xem chi tiết
-            </button>
-            ${window.authManager && window.authManager.isCustomer() ? 
-              `<button class="btn-cart" onclick="addToCartDirect('${p._id}')" ${p.stock <= 0 ? 'disabled' : ''}>
-                <span class="btn-icon">🛒</span>
-                ${p.stock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
-              </button>` : 
-              ''
-            }
-          </div>
-        `;
-        grid.appendChild(card);
-      });
+      await productManager.searchProducts();
     }
 
     // Xóa tìm kiếm và quay lại tất cả sản phẩm
     async function clearSearch() {
-      const searchInput = document.getElementById('searchInput');
-      const searchResults = document.getElementById("searchResults");
-      const clearSearchBtn = document.getElementById("clearSearchBtn");
-
-      searchInput.value = '';
-      searchResults.style.display = 'none';
-      clearSearchBtn.style.display = 'none';
-      
-      currentSearchTerm = '';
-      isSearching = false;
-      
-      await loadProducts();
+      await productManager.clearSearch();
     }
 
     // Load sản phẩm
     async function loadProducts() {
-      const grid = document.getElementById("productGrid");
-      try {
-        const res = await fetch("http://localhost:8000/v1/products?current=1&pageSize=10");
-        const data = await res.json();
-        const products = data.result;
-        grid.innerHTML = "";
-
-        products.forEach(p => {
-          const card = document.createElement("div");
-          card.className = "product-card";
-          card.setAttribute('data-product-id', p._id);
-          card.innerHTML = `
-            <div class="product-image-container">
-              <img src="${p.thumbnail || 'https://via.placeholder.com/200x180'}" alt="Product">
-              <div class="product-overlay">
-                <div class="product-stock-badge ${p.stock > 0 ? 'in-stock' : 'out-of-stock'}">
-                  ${p.stock > 0 ? 'Còn hàng' : 'Hết hàng'}
-                </div>
-              </div>
-            </div>
-            <div class="product-info">
-              <h3 class="product-title">${p.title}</h3>
-              <div class="product-price">${p.price.toLocaleString()} USD</div>
-              <div class="product-description">${p.description || 'Không có mô tả'}</div>
-              <div class="product-stock-info">
-                <span class="stock-label">Tồn kho:</span>
-                <span class="stock-value ${p.stock > 10 ? 'high' : p.stock > 0 ? 'medium' : 'low'}">${p.stock} sản phẩm</span>
-              </div>
-            </div>
-            <div class="product-actions">
-              <button class="btn-detail" onclick="viewProductDetail('${p._id}')">
-                <span class="btn-icon">👁️</span>
-                Xem chi tiết
-              </button>
-              ${window.authManager && window.authManager.isCustomer() ? 
-                `<button class="btn-cart" onclick="addToCartDirect('${p._id}')" ${p.stock <= 0 ? 'disabled' : ''}>
-                  <span class="btn-icon">🛒</span>
-                  ${p.stock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
-                </button>` : 
-                ''
-              }
-            </div>
-          `;
-          grid.appendChild(card);
-        });
-      } catch (err) {
-        grid.innerHTML = '<p style="text-align:center;color:red">Không thể tải sản phẩm.</p>';
-        console.error(err);
-      }
+      await productManager.loadProducts();
     }
 
     // Function để thêm vào giỏ hàng trực tiếp (không qua modal)

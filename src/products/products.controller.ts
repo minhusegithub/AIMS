@@ -26,8 +26,21 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
   @ResponseMessage('Tạo sản phẩm thành công')
-  create(@Body() createProductDto: CreateProductDto) {
+  create(
+    @Body() createProductDto: CreateProductDto
+  ) {
     return this.productsService.create(createProductDto);
+  }
+
+  // Create product by admin (tương tự updateProfile)
+  @Post('admin/create')
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
+  @ResponseMessage('Tạo sản phẩm thành công')
+  createProductByAdmin(
+    @Body() createProductDto: CreateProductDto
+  ) {
+    return this.productsService.createProductByAdmin(createProductDto);
   }
 
   // Get all products
@@ -42,90 +55,35 @@ export class ProductsController {
 
   // Get a product by id
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param('id') id: string
+  ) {
     return this.productsService.findOne(id);
   }
 
-  // Update a product
-  @Patch(':id')
+  // Update product by admin (tương tự updateProfile)
+  @Patch('admin/update/:id')
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
   @ResponseMessage('Cập nhật sản phẩm thành công')
-  update(
+  updateProductByAdmin(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productsService.update(id, updateProductDto);
+    return this.productsService.updateProductByAdmin(id, updateProductDto);
   }
 
-  // Update product stock
-  @Patch(':id/stock')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Cập nhật tồn kho thành công')
-  updateStock(
-    @Param('id') id: string,
-    @Body() body: { stock: number },
-  ) {
-    return this.productsService.updateStock(id, body.stock);
-  }
-
-  // Update product price
-  @Patch(':id/price')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Cập nhật giá thành công')
-  updatePrice(
-    @Param('id') id: string,
-    @Body() body: { price: number },
-  ) {
-    return this.productsService.updatePrice(id, body.price);
-  }
-
-  // Update product title
-  @Patch(':id/title')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Cập nhật tên sản phẩm thành công')
-  updateTitle(
-    @Param('id') id: string,
-    @Body() body: { title: string },
-  ) {
-    return this.productsService.updateTitle(id, body.title);
-  }
-
-  // Update product description
-  @Patch(':id/description')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Cập nhật mô tả thành công')
-  updateDescription(
-    @Param('id') id: string,
-    @Body() body: { description: string },
-  ) {
-    return this.productsService.updateDescription(id, body.description);
-  }
-
-  // Update product thumbnail
-  @Patch(':id/thumbnail')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Cập nhật hình ảnh thành công')
-  updateThumbnail(
-    @Param('id') id: string,
-    @Body() body: { thumbnail: string },
-  ) {
-    return this.productsService.updateThumbnail(id, body.thumbnail);
-  }
-
-  // Delete a product
-  @Delete(':id')
+  // Delete product by admin (tương tự updateProfile)
+  @Delete('admin/delete/:id')
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
   @ResponseMessage('Xóa sản phẩm thành công')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+  deleteProductByAdmin(
+    @Param('id') id: string
+  ) {
+    return this.productsService.deleteProductByAdmin(id);
   }
+
 
   // Get products sort by price with option
   @Post('sort-by-price')

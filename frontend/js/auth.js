@@ -209,6 +209,33 @@ class AuthManager {
     }
   }
 
+  // Lấy giỏ hàng của user
+  async getCart() {
+    if (!this.accessToken) {
+      throw new Error('Không có access token');
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/carts/my-cart`, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data };
+      } else {
+        const errorData = await response.json();
+        return { success: false, error: errorData.message || 'Không thể lấy giỏ hàng' };
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy giỏ hàng:', error);
+      return { success: false, error: 'Lỗi kết nối' };
+    }
+  }
+
   // Thêm sản phẩm vào giỏ hàng
   async addToCart(productId, quantity) {
     if (!this.accessToken) {
@@ -239,29 +266,91 @@ class AuthManager {
     }
   }
 
-  // Lấy giỏ hàng của user
-  async getCart() {
+  // Function để chỉnh sửa sản phẩm (cho admin)
+  async updateProduct(productId, productData) {
     if (!this.accessToken) {
       throw new Error('Không có access token');
     }
 
     try {
-      const response = await fetch(`${this.baseURL}/carts/my-cart`, {
+      const response = await fetch(`${this.baseURL}/products/admin/update/${productId}`, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(productData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return { success: true, message: result.message, data: result.data };
+      } else {
+        const errorData = await response.json();
+        return { success: false, error: errorData.message || 'Cập nhật thất bại' };
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật sản phẩm:', error);
+      return { success: false, error: 'Lỗi kết nối' };
+    }
+  }
+
+  // Function để xóa sản phẩm (cho admin)
+  async deleteProduct(productId) {
+    if (!this.accessToken) {
+      throw new Error('Không có access token');
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/products/admin/delete/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
         },
         credentials: 'include'
       });
 
       if (response.ok) {
-        const data = await response.json();
-        return { success: true, data };
+        const result = await response.json();
+        return { success: true, message: result.message, data: result.data };
       } else {
         const errorData = await response.json();
-        return { success: false, error: errorData.message || 'Không thể lấy giỏ hàng' };
+        return { success: false, error: errorData.message || 'Xóa thất bại' };
       }
     } catch (error) {
-      console.error('Lỗi khi lấy giỏ hàng:', error);
+      console.error('Lỗi khi xóa sản phẩm:', error);
+      return { success: false, error: 'Lỗi kết nối' };
+    }
+  }
+
+  // Function để tạo sản phẩm (cho admin)
+  async createProduct(productData) {
+    if (!this.accessToken) {
+      throw new Error('Không có access token');
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/products/admin/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(productData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return { success: true, message: result.message, data: result.data };
+      } else {
+        const errorData = await response.json();
+        return { success: false, error: errorData.message || 'Tạo sản phẩm thất bại' };
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo sản phẩm:', error);
       return { success: false, error: 'Lỗi kết nối' };
     }
   }
@@ -419,164 +508,6 @@ window.handleUpdateProfile = async function(e) {
   }
 };
 
-// Function để xem chi tiết sản phẩm
-window.viewProductDetail = function(productId) {
-  // Tạo modal hiển thị chi tiết sản phẩm
-  const modal = document.getElementById('userModal');
-  const modalContent = document.getElementById('userModalContent');
-  
-  if (modal && modalContent) {
-    // Lấy thông tin sản phẩm từ data attribute hoặc API
-    const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-    if (productCard) {
-      const title = productCard.querySelector('.product-title').textContent;
-      const price = productCard.querySelector('.product-price').textContent;
-      const image = productCard.querySelector('img').src;
-      
-      modalContent.innerHTML = `
-        <div class="product-detail">
-          <img src="${image}" alt="${title}" style="width: 100%; max-width: 300px; height: auto; border-radius: 8px;">
-          <h3 style="margin: 15px 0; color: #333;">${title}</h3>
-          <p style="font-size: 18px; color: #e91e63; font-weight: bold; margin-bottom: 20px;">${price}</p>
-          <div class="product-actions">
-            ${window.authManager.isCustomer() ? `
-              <div style="margin-bottom: 15px;">
-                <label for="quantity" style="display: block; margin-bottom: 5px;">Số lượng:</label>
-                <input type="number" id="quantity" value="1" min="1" style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <button class="btn-cart" onclick="addToCart('${productId}')">Thêm vào giỏ hàng</button>
-            ` : ''}
-            ${window.authManager.isAdmin() ? `
-              <button class="btn-edit" onclick="editProduct('${productId}')" style="margin-left: 10px;">Chỉnh sửa sản phẩm</button>
-            ` : ''}
-          </div>
-        </div>
-      `;
-      
-      modal.style.display = 'block';
-    }
-  }
-};
-
-// Function để thêm vào giỏ hàng
-window.addToCart = async function(productId) {
-  const quantity = parseInt(document.getElementById('quantity').value) || 1;
-  
-  const result = await window.authManager.addToCart(productId, quantity);
-  
-  if (result.success) {
-    alert('Đã thêm vào giỏ hàng thành công!');
-    closeUserModal();
-  } else {
-    alert(`Lỗi: ${result.error}`);
-  }
-};
-
-// Function để chỉnh sửa sản phẩm (cho admin)
-window.editProduct = function(productId) {
-  // Tạo form chỉnh sửa sản phẩm
-  const modal = document.getElementById('userModal');
-  const modalContent = document.getElementById('userModalContent');
-  
-  if (modal && modalContent) {
-    const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-    if (productCard) {
-      const title = productCard.querySelector('.product-title').textContent;
-      const price = productCard.querySelector('.product-price').textContent.replace(' USD', '');
-      const image = productCard.querySelector('img').src;
-      
-      modalContent.innerHTML = `
-        <h3 style="margin-bottom: 20px;">Chỉnh sửa sản phẩm</h3>
-        <form id="editProductForm" class="edit-profile-form">
-          <div class="form-group">
-            <label for="editProductTitle">Tên sản phẩm:</label>
-            <input type="text" id="editProductTitle" value="${title}" required>
-          </div>
-          <div class="form-group">
-            <label for="editProductPrice">Giá (USD):</label>
-            <input type="number" id="editProductPrice" value="${price}" step="0.01" required>
-          </div>
-          <div class="form-group">
-            <label for="editProductImage">URL hình ảnh:</label>
-            <input type="url" id="editProductImage" value="${image}" required>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" onclick="viewProductDetail('${productId}')">Hủy</button>
-            <button type="submit" class="btn-save">Lưu thay đổi</button>
-          </div>
-        </form>
-      `;
-      
-      // Thêm event listener cho form
-      document.getElementById('editProductForm').addEventListener('submit', handleUpdateProduct);
-    }
-  }
-};
-
-// Function để xử lý cập nhật sản phẩm
-window.handleUpdateProduct = async function(e) {
-  e.preventDefault();
-  
-  const productId = e.target.closest('.modal-content').querySelector('.btn-cancel').onclick.toString().match(/'([^']+)'/)[1];
-  
-  const formData = {
-    title: document.getElementById('editProductTitle').value,
-    price: parseFloat(document.getElementById('editProductPrice').value),
-    thumbnail: document.getElementById('editProductImage').value,
-  };
-
-  try {
-    // Sử dụng API endpoint mới từ backend
-    const response = await fetch(`http://localhost:8000/v1/products/${productId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${window.authManager.getAccessToken()}`,
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(formData)
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      alert(result.message || 'Cập nhật sản phẩm thành công!');
-      window.location.reload(); // Reload để cập nhật UI
-    } else {
-      const errorData = await response.json();
-      alert(`Lỗi: ${errorData.message || 'Cập nhật thất bại'}`);
-    }
-  } catch (error) {
-    console.error('Lỗi khi cập nhật sản phẩm:', error);
-    alert('Lỗi kết nối');
-  }
-};
-
-// Function để cập nhật từng trường riêng lẻ (nếu cần)
-window.updateProductField = async function(productId, field, value) {
-  try {
-    const response = await fetch(`http://localhost:8000/v1/products/${productId}/${field}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${window.authManager.getAccessToken()}`,
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ [field]: value })
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      return { success: true, message: result.message, data: result.data };
-    } else {
-      const errorData = await response.json();
-      return { success: false, error: errorData.message || 'Cập nhật thất bại' };
-    }
-  } catch (error) {
-    console.error(`Lỗi khi cập nhật ${field}:`, error);
-    return { success: false, error: 'Lỗi kết nối' };
-  }
-};
-
 // Helper functions
 function getGenderText(gender) {
   const genderMap = {
@@ -602,3 +533,4 @@ window.closeUserModal = function() {
     modal.style.display = 'none';
   }
 }; 
+
