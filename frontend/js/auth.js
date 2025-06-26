@@ -78,19 +78,66 @@ class AuthManager {
     }
   }
 
-  // Đăng xuất
+  // Xóa cart của user khi đăng xuất
+  async clearUserCart() {
+    if (!this.accessToken) {
+      return { success: false, error: 'Không có access token' };
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/carts/clear-user-cart`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        return { success: true, message: 'Cart cleared successfully' };
+      } else {
+        const errorData = await response.json();
+        return { success: false, error: errorData.message || 'Không thể xóa giỏ hàng' };
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa giỏ hàng:', error);
+      return { success: false, error: 'Lỗi kết nối' };
+    }
+  }
+
+  // Logout với xóa cart
   async logout() {
     try {
-      await fetch(`${this.baseURL}/users/logout`, {
+      // Xóa cart trước khi logout
+      await this.clearUserCart();
+    } catch (error) {
+      console.error('Lỗi khi xóa cart:', error);
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/users/logout`, {
         method: 'POST',
         credentials: 'include'
       });
+
+      if (response.ok) {
+        // Clear local storage
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userData');
+        this.accessToken = null;
+        this.userData = null;
+        
+        // Update UI
+        this.updateUI({ isAuthenticated: false, user: null });
+        
+        return { success: true, message: 'Logout successful' };
+      } else {
+        const errorData = await response.json();
+        return { success: false, error: errorData.message || 'Logout failed' };
+      }
     } catch (error) {
-      console.error('Lỗi khi đăng xuất:', error);
-    } finally {
-      this.accessToken = null;
-      this.userData = null;
-      localStorage.removeItem('accessToken');
+      console.error('Lỗi khi logout:', error);
+      return { success: false, error: 'Lỗi kết nối' };
     }
   }
 
@@ -212,9 +259,8 @@ class AuthManager {
   // Lấy giỏ hàng của user
   async getCart() {
     if (!this.accessToken) {
-      throw new Error('Không có access token');
+      return { success: false, error: 'Không có access token' };
     }
-
     try {
       const response = await fetch(`${this.baseURL}/carts/my-cart`, {
         headers: {
@@ -222,27 +268,47 @@ class AuthManager {
         },
         credentials: 'include'
       });
-
+      // console.log(response);
       if (response.ok) {
-        const data = await response.json();
+        // Kiểm tra response có body không trước khi parse
+        const text = await response.text();
+        // console.log(text);
+        if (!text) {
+          return { success: false, error: 'Không nhận được dữ liệu giỏ hàng từ server' };
+        }
+        let data = null;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          return { success: false, error: 'Dữ liệu giỏ hàng trả về không hợp lệ' };
+        }
         return { success: true, data };
       } else {
-        const errorData = await response.json();
+        // Nếu lỗi, cố gắng lấy message từ body
+        let errorText = await response.text();
+        let errorData = {};
+        try {
+          errorData = errorText ? JSON.parse(errorText) : { message: 'Không thể lấy giỏ hàng' };
+        } catch (e) {
+          errorData = { message: 'Không thể lấy giỏ hàng' };
+        }
         return { success: false, error: errorData.message || 'Không thể lấy giỏ hàng' };
       }
     } catch (error) {
       console.error('Lỗi khi lấy giỏ hàng:', error);
-      return { success: false, error: 'Lỗi kết nối' };
+      return { success: false, error: error?.message || 'Lỗi kết nối' };
     }
   }
 
   // Thêm sản phẩm vào giỏ hàng
   async addToCart(productId, quantity) {
     if (!this.accessToken) {
-      throw new Error('Không có access token');
+      return { success: false, error: 'Không có access token' };
     }
-
-    try {
+    if (!productId || !quantity || isNaN(quantity) || quantity <= 0) {
+      return { success: false, error: 'Dữ liệu sản phẩm hoặc số lượng không hợp lệ' };
+    }
+    // try {
       const response = await fetch(`${this.baseURL}/carts/add-to-cart`, {
         method: 'POST',
         headers: {
@@ -252,18 +318,25 @@ class AuthManager {
         credentials: 'include',
         body: JSON.stringify({ productId, quantity })
       });
+      console.log(response);
 
-      if (response.ok) {
-        const data = await response.json();
-        return { success: true, data };
-      } else {
-        const errorData = await response.json();
-        return { success: false, error: errorData.message || 'Thêm vào giỏ hàng thất bại' };
-      }
-    } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error);
-      return { success: false, error: 'Lỗi kết nối' };
-    }
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   return { success: true, data };
+      // } else {
+      //   let errorData = {};
+      //   try {
+      //     errorData = await response.json();
+      //   } catch (e) {
+      //     errorData = { message: 'Lỗi không xác định từ server' };
+      //   }
+      //   return { success: false, error: errorData.message || 'Thêm vào giỏ hàng thất bại' };
+      // }
+    // } 
+    // catch (error) {
+    //   console.error('Lỗi khi thêm vào giỏ hàng:', error);
+    //   return { success: false, error: error?.message || 'Lỗi kết nối' };
+    // }
   }
 
   // Function để chỉnh sửa sản phẩm (cho admin)
@@ -352,6 +425,37 @@ class AuthManager {
     } catch (error) {
       console.error('Lỗi khi tạo sản phẩm:', error);
       return { success: false, error: 'Lỗi kết nối' };
+    }
+  }
+
+  // Xóa sản phẩm khỏi giỏ hàng
+  async removeFromCart(productId) {
+    if (!this.accessToken) {
+      return { success: false, error: 'Không có access token' };
+    }
+    try {
+      const response = await fetch(`${this.baseURL}/carts/remove-product`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ productId })
+      });
+      if (response.ok) {
+        return { success: true };
+      } else {
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { message: 'Không thể xóa sản phẩm khỏi giỏ hàng' };
+        }
+        return { success: false, error: errorData.message || 'Không thể xóa sản phẩm khỏi giỏ hàng' };
+      }
+    } catch (error) {
+      return { success: false, error: error?.message || 'Lỗi kết nối' };
     }
   }
 }

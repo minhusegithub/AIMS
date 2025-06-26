@@ -19,6 +19,7 @@ import aqp from 'api-query-params';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { CartsService } from '../carts/carts.service';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +27,7 @@ export class UsersService {
     @InjectModel(UserM.name) private userModel: SoftDeleteModel<UserDocument>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly cartsService: CartsService,
   ) {}
 
   // Generate tokens
@@ -123,6 +125,13 @@ export class UsersService {
       { new: true }
     );
 
+    // Tự động tạo cart mới cho user khi đăng nhập thành công
+    try {
+      await this.cartsService.getUserCart(user._id.toString());
+    } catch (error) {
+      console.error('Lỗi khi tạo cart cho user:', error);
+    }
+
     // Set refresh token in httpOnly cookie
     res.cookie('refreshToken', tokens.refreshToken, this.getCookieOptions());
 
@@ -146,6 +155,13 @@ export class UsersService {
           { refreshToken: null },
           { new: true }
         );
+
+        // Xóa cart của user khi đăng xuất
+        try {
+          await this.cartsService.clearUserCart(payload.sub);
+        } catch (error) {
+          console.error('Lỗi khi xóa cart của user:', error);
+        }
       } catch (error) {
         // Token invalid, just continue
       }
@@ -194,8 +210,6 @@ export class UsersService {
     }
   }
 
-
-
   // Refresh token
   async refreshToken(refreshToken: string) {
     if (!refreshToken) {
@@ -230,8 +244,6 @@ export class UsersService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
-
-
 
   // Find one user by ID
   async findOne(id: string) {
@@ -304,8 +316,4 @@ export class UsersService {
       data: updatedUser
     };
   }
-
-  
-
-  
 }

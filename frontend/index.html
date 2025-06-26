@@ -49,6 +49,11 @@
       <button onclick="location.href='register.html'">Đăng ký</button>
     </div>
     <div class="user-info hidden" id="userInfo">
+      <button class="btn-cart-view relative" id="viewCartBtn" onclick="location.href='cart.html'" tabindex="0" aria-label="Xem giỏ hàng" role="button" onkeydown="if(event.key==='Enter'){location.href='cart.html'}">
+        <span class="cart-icon" style="font-size: 1.3em;">🛒</span>
+        <span>Giỏ hàng</span>
+        <span id="cartCountBadge" class="cart-badge" style="position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;background:#ef4444;color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.95em;font-weight:bold;box-shadow:0 1px 4px #0002;">3</span>
+      </button>
       <button class="user-name-btn" id="userNameBtn" onclick="showUserProfile()">
         <span id="userName">Tên người dùng</span>
       </button>
@@ -159,6 +164,28 @@
         alert('Vui lòng nhập số lượng hợp lệ!');
       }
     };
+
+    // Hiển thị số lượng sản phẩm trong giỏ hàng trên badge
+    async function updateCartBadge() {
+      if (!window.authManager || !window.authManager.getCart) return;
+      try {
+        const result = await window.authManager.getCart();
+        const badge = document.getElementById('cartCountBadge');
+        if (badge) {
+          if (result.success && result.data && result.data.items && result.data.items.length > 0) {
+            let totalCount = 0;
+            result.data.items.forEach(item => { totalCount += item.quantity; });
+            badge.textContent = totalCount;
+            badge.style.display = 'inline-flex';
+          } else {
+            badge.textContent = '0';
+            badge.style.display = 'inline-flex';
+          }
+        }
+      } catch (e) {}
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+    // Nếu có thao tác thêm vào giỏ hàng, gọi updateCartBadge() lại ở các nơi phù hợp
   </script>
 </body>
 </html>

@@ -21,7 +21,9 @@ export class OrdersController {
 
   @Post()
   @Roles(Role.Customer)
-  create(@Body() createOrderDto: CreateOrderDto) {
+  create(
+    @Body() createOrderDto: CreateOrderDto
+  ) {
     return this.ordersService.create(createOrderDto);
   }
 

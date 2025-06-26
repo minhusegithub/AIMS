@@ -7,12 +7,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { CartsModule } from '../carts/carts.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     ConfigModule, // để dùng biến môi trường trong JWT
     PassportModule,
+    CartsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

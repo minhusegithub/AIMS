@@ -22,27 +22,27 @@ export class CartsService {
     return newCart;
   }
 
-  // get a cart by id
-  async findOne(id: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found cart";
-    }
-    const cart = await this.cartModel.findOne({_id: id})
-      .populate('userId', '_id name email age gender address role')
-      .populate({
-        path: 'products.productId',
-        select: 'title price'
-      });
+  // // get a cart by id
+  // async findOne(id: string) {
+  //   if(!mongoose.Types.ObjectId.isValid(id)){
+  //     return "not found cart";
+  //   }
+  //   const cart = await this.cartModel.findOne({_id: id})
+  //     .populate('userId', '_id name email age gender address role')
+  //     .populate({
+  //       path: 'products.productId',
+  //       select: 'title price'
+  //     });
     
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
-    return cart;
-  }
+  //   if (!cart) {
+  //     throw new NotFoundException('Cart not found');
+  //   }
+  //   return cart;
+  // }
 
   // get user's cart
   async getUserCart(userId: string) {
-    let cart = await this.cartModel.findOne({ userId })
+    let cart = await this.cartModel.findOne({ userId: userId, isDeleted: false })
       .populate('userId', '_id name email age gender address role')
       .populate({
         path: 'products.productId',
@@ -55,9 +55,28 @@ export class CartsService {
         userId,
         products: []
       });
+      // Populate lại sau khi tạo mới
+      cart = await this.cartModel.findById(cart._id)
+        .populate('userId', '_id name email age gender address role')
+        .populate({
+          path: 'products.productId',
+          select: '_id title price thumbnail'
+        });
     }
 
+    if (!cart) {
+      return { success: false, message: 'Cart not found' };
+    }
     return cart;
+  }
+
+  // Xóa cart của user khi đăng xuất
+  async clearUserCart(userId: string) {
+    const cart = await this.cartModel.findOne({ userId });
+    if (cart) {
+      await this.cartModel.softDelete({ _id: cart._id });
+    }
+    return { message: 'Cart cleared successfully' };
   }
 
   // add product to user's cart
@@ -108,7 +127,7 @@ export class CartsService {
   }
 
   // add to cart
-  async addToCart(id: string, productId: string, quantity: number) {
+  async updateCart(id: string, productId: string, quantity: number) {
     const cart = await this.cartModel.findOne({_id: id});
     if(!cart){
       return "not found cart";
@@ -146,11 +165,32 @@ export class CartsService {
     return updatedCart;
   }
 
-  // delete a cart
-  async remove(id: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found cart";
+  // Xóa sản phẩm khỏi giỏ hàng của user hiện tại
+  async removeProductFromUserCart(userId: string, productId: string) {
+    let cart = await this.cartModel.findOne({ userId: userId, isDeleted: false });
+    if (!cart) {
+      return { success: false, message: 'Cart not found' };
     }
-    return await this.cartModel.softDelete({_id: id});
+    const index = cart.products.findIndex(item => item.productId.toString() === productId);
+    if (index === -1) {
+      return { success: false, message: 'Product not found in cart' };
+    }
+    cart.products.splice(index, 1);
+    await cart.save();
+    return { success: true };
+  }
+
+  // Lấy cart theo id
+  async getCartById(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return null;
+    }
+    const cart = await this.cartModel.findOne({ _id: id, isDeleted: false })
+      .populate('userId', '_id name email age gender address role')
+      .populate({
+        path: 'products.productId',
+        select: '_id title price thumbnail'
+      });
+    return cart;
   }
 }
