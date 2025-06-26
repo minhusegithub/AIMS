@@ -15,12 +15,7 @@ export class VnpayController {
   }
 
   @Get('return')
-  async vnpayReturn(@Query() query: any, @Res() res: Response) {
-    const isValid = this.vnpayService.validateReturnUrl(query);
-    if (isValid) {
-      return res.send('Thanh toán thành công!');
-    } else {
-      return res.status(400).send('Thanh toán thất bại hoặc sai chữ ký!');
-    }
+  async vnpayReturn(@Query() query: any) {
+    return this.vnpayService.handleReturnUrl(query);
   }
 }

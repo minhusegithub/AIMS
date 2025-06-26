@@ -75,24 +75,19 @@ export class VnpayService {
 
   }
 
-  validateReturnUrl(query: Record<string, string>) {
-    const secureHash = query.vnp_SecureHash;
-    delete query.vnp_SecureHash;
-    delete query.vnp_SecureHashType;
+  handleReturnUrl(query: Record<string, string>) {
+    if(query.vnp_ResponseCode === "00"){ // Nếu thành công
+      return { success: true, message: 'Thanh toán thành công!' , data: {
+        "Số tiền thanh toán": (Number(query.vnp_Amount) / 100),
+        "Mã đơn hàng": query.vnp_TxnRef , 
+        "Ngày thanh toán": query.vnp_CreateDate,
 
-    const sorted = Object.keys(query).sort().reduce((acc, key) => {
-      acc[key] = query[key];
-      return acc;
-    }, {} as Record<string, string>);
-
-    const signData = qs.stringify(sorted, { encode: true, encodeValuesOnly: true });
-    const secretKey = this.configService.get<string>('VNPAY_HASH_SECRET');
-    const hmac = crypto.createHmac('sha512', secretKey);
-    const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
-    console.log('VNPAY - SIGNED DATA:');
+      }};
+    }else{
+      return { success: false, message: 'Thanh toán thất bại!' , data: query};
+    }
     
-
-    return secureHash === signed;
+    
   }
 
   private formatDate(date: Date): string {
