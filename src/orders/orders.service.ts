@@ -44,17 +44,14 @@ export class OrdersService {
   }
 
 
-  
-  
   async create(createOrderDto: CreateOrderDto) {
     const { cartId, placeRushOrder, paymentMethod } = createOrderDto;
 
     // Lấy thông tin giỏ hàng
-    const cartResult = await this.cartsService.findOne(cartId);
-    if (typeof cartResult === 'string' || !cartResult) {
+    const cart = await this.cartsService.getCartById(cartId);
+    if (!cart) {
       throw new NotFoundException('Cart not found');
     }
-    const cart = cartResult as Cart;
 
     // Tính tổng giá trị đơn hàng sử dụng phương thức calculateTotalPrice
     const totalPrice = this.calculateTotalPrice(cart, placeRushOrder);

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đặt hàng | AIMS</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: #f8fafc;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #fff;
+      box-shadow: 0 2px 8px #0001;
+      padding: 24px 0 16px 0;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      color: #0ea5e9;
+      font-size: 2.2rem;
+      margin: 0 0 8px 0;
+      letter-spacing: 1px;
+    }
+    .back-btn {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+      box-shadow: 0 1px 4px #0002;
+    }
+    .back-btn:hover, .back-btn:focus {
+      background: #0369a1;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #0001;
+      padding: 32px 20px 24px 20px;
+      min-height: 400px;
+    }
+    .cart-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #0001;
+    }
+    .cart-table th, .cart-table td {
+      padding: 14px 10px;
+      text-align: left;
+    }
+    .cart-table th {
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .cart-table tr:nth-child(even) {
+      background: #e0f2fe;
+    }
+    .cart-table tr:nth-child(odd) {
+      background: #f1f5f9;
+    }
+    .cart-total {
+      text-align: right;
+      font-size: 1.25rem;
+      color: #0ea5e9;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+    .order-confirm-btn {
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 14px 36px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 1px 4px #0002;
+      transition: background 0.2s;
+      letter-spacing: 1px;
+      margin-top: 24px;
+      float: right;
+    }
+    .order-confirm-btn:hover, .order-confirm-btn:focus {
+      background: #15803d;
+    }
+    @media (max-width: 600px) {
+      main { padding: 10px 2px; }
+      .cart-table th, .cart-table td { padding: 8px 4px; font-size: 0.98rem; }
+      header h1 { font-size: 1.3rem; }
+      .order-confirm-btn { width: 100%; float: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📝 Xác nhận đơn hàng</h1>
+    <button onclick="location.href='cart.html'" class="back-btn" tabindex="0" aria-label="Quay lại giỏ hàng" role="button" onkeydown="if(event.key==='Enter'){location.href='cart.html'}">← Quay lại giỏ hàng</button>
+  </header>
+  <main>
+    <div id="orderCartContainer">
+      <!-- Thông tin giỏ hàng sẽ được render ở đây -->
+    </div>
+    <button class="order-confirm-btn" onclick="handleOrderConfirm()">XÁC NHẬN ĐẶT HÀNG</button>
+  </main>
+  <script src="js/auth.js"></script>
+  <script src="js/order.js"></script>
+  <script>
+    async function renderOrderCart() {
+      const container = document.getElementById('orderCartContainer');
+      container.innerHTML = '<p>Đang tải giỏ hàng...</p>';
+      const result = await window.authManager.getCart();
+      if (!result.success) {
+        container.innerHTML = `<p style='color:red;'>${result.error || 'Không thể lấy giỏ hàng.'}</p>`;
+        return;
+      }
+      const cart = result.data;
+      if (!cart || !cart.products || cart.products.length === 0) {
+        container.innerHTML = '<p>Giỏ hàng của bạn đang trống.</p>';
+        document.querySelector('.order-confirm-btn').style.display = 'none';
+        return;
+      }
+      let html = '<table class="cart-table"><thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Giá</th><th>Tổng</th></tr></thead><tbody>';
+      let total = 0;
+      cart.products.forEach(item => {
+        const product = item.productId;
+        const itemTotal = product.price * item.quantity;
+        total += itemTotal;
+        html += `<tr>
+          <td>${product.title}</td>
+          <td>${item.quantity}</td>
+          <td>${product.price.toLocaleString()} USD</td>
+          <td>${itemTotal.toLocaleString()} USD</td>
+        </tr>`;
+      });
+      html += `</tbody></table><div class="cart-total">Tổng tiền: <strong>${total.toLocaleString()} USD</strong></div>`;
+      // Thêm thông tin user
+      if (cart.userId) {
+        html += `<div class="order-user-info" style="margin-top:24px;padding:18px 16px;background:#f1f5f9;border-radius:8px;box-shadow:0 1px 4px #0001;">
+          <h3 style='margin:0 0 10px 0;color:#0ea5e9;font-size:1.15em;'>Thông tin người đặt hàng</h3>
+          <div><strong>Họ tên:</strong> ${cart.userId.name || ''}</div>
+          <div><strong>Email:</strong> ${cart.userId.email || ''}</div>
+          <div><strong>Địa chỉ:</strong> ${cart.userId.address || ''}</div>
+          <div><strong>Tuổi:</strong> ${cart.userId.age || ''}</div>
+          <div><strong>Giới tính:</strong> ${cart.userId.gender || ''}</div>
+        </div>`;
+      }
+      
+      // Thêm mục đặt hàng nhanh và phương thức thanh toán
+      html += `<div class="order-options" style="margin-top:24px;padding:18px 16px;background:#f1f5f9;border-radius:8px;box-shadow:0 1px 4px #0001;">
+        <h3 style='margin:0 0 15px 0;color:#0ea5e9;font-size:1.15em;'>Tùy chọn đặt hàng</h3>
+        
+        <div style="margin-bottom:16px;">
+          <label style="display:flex;align-items:center;cursor:pointer;font-weight:500;">
+            <input type="checkbox" id="rushOrder" style="margin-right:8px;transform:scale(1.2);">
+            <span>🚀 Đặt hàng nhanh (phí 10% tổng giá trị)</span>
+          </label>
+        </div>
+        
+        <div>
+          <label style="display:block;margin-bottom:8px;font-weight:500;">💳 Phương thức thanh toán:</label>
+          <select id="paymentMethod" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-size:1rem;">
+            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+            <option value="VNPAY">Thanh toán qua VNPAY</option>
+           
+          </select>
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+    }
+    document.addEventListener('DOMContentLoaded', renderOrderCart);
+  </script>
+</body>
+</html> 

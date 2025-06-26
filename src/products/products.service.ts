@@ -47,16 +47,7 @@ export class ProductsService {
   async createProductByAdmin(createProductDto: CreateProductDto) {
     const {title, description, price, stock, thumbnail} = createProductDto;
 
-    // Validate input
-    if (price < 0) {
-      throw new BadRequestException('Giá sản phẩm không được âm');
-    }
-    if (stock < 0) {
-      throw new BadRequestException('Số lượng tồn kho không được âm');
-    }
-    if (!title || title.trim().length === 0) {
-      throw new BadRequestException('Tên sản phẩm không được để trống');
-    }
+   
 
     const newProduct = await this.productModel.create({
       title: title.trim(),

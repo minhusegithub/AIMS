@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giỏ hàng | AIMS</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: #f8fafc;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #fff;
+      box-shadow: 0 2px 8px #0001;
+      padding: 24px 0 16px 0;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      color: #0ea5e9;
+      font-size: 2.2rem;
+      margin: 0 0 8px 0;
+      letter-spacing: 1px;
+    }
+    .back-btn {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+      box-shadow: 0 1px 4px #0002;
+    }
+    .back-btn:hover, .back-btn:focus {
+      background: #0369a1;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #0001;
+      padding: 32px 20px 24px 20px;
+      min-height: 400px;
+    }
+    .cart-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #0001;
+    }
+    .cart-table th, .cart-table td {
+      padding: 14px 10px;
+      text-align: left;
+    }
+    .cart-table th {
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .cart-table tr:nth-child(even) {
+      background: #e0f2fe;
+    }
+    .cart-table tr:nth-child(odd) {
+      background: #f1f5f9;
+    }
+    .cart-total {
+      text-align: right;
+      font-size: 1.25rem;
+      color: #0ea5e9;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+    @media (max-width: 600px) {
+      main { padding: 10px 2px; }
+      .cart-table th, .cart-table td { padding: 8px 4px; font-size: 0.98rem; }
+      header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 Giỏ hàng của bạn</h1>
+    <button onclick="location.href='index.html'" class="back-btn" tabindex="0" aria-label="Quay lại trang chính" role="button" onkeydown="if(event.key==='Enter'){location.href='index.html'}">← Quay lại</button>
+  </header>
+  <main>
+    <div id="cartContainer">
+      <!-- Danh sách sản phẩm trong giỏ hàng sẽ được render ở đây -->
+    </div>
+  </main>
+  <script src="js/auth.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html> 

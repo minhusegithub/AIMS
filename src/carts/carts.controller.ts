@@ -18,20 +18,30 @@ export class CartsController {
     return this.cartsService.create(createCartDto);
   }
 
-  @Get(':id')
-  @ResponseMessage('Get a cart by id')
-  findOne(
-    @Param('id') id: string
-  ) {
-    return this.cartsService.findOne(id);
-  }
+  // @Get(':id')
+  // @ResponseMessage('Get a cart by id')
+  // findOne(
+  //   @Param('id') id: string
+  // ) {
+  //   return this.cartsService.findOne(id);
+  // }
 
   // Get current user's cart
   @Get('my-cart')
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('Get current user cart')
-  getMyCart(@CurrentUser() user: any) {
-    return this.cartsService.getUserCart(user.userId);
+  async getMyCart(
+    @CurrentUser() user: any
+  ) {
+    try {
+      const cart = await this.cartsService.getUserCart(user.userId);
+      if (!cart) {
+        return { success: false, message: 'Cart not found' };
+      }
+      return cart;
+    } catch (error) {
+      return { success: false, message: error?.message || 'Không thể lấy giỏ hàng' };
+    }
   }
 
   // Add product to current user's cart
@@ -46,19 +56,30 @@ export class CartsController {
   }
 
   @Patch('update-cart/:id')
-  addToCart(
+  updateCart(
     @Param('id') id: string,
     @Query('productId') productId: string,
     @Query('quantity') quantity: number
   ) {
-    return this.cartsService.addToCart(id, productId, quantity);
+    return this.cartsService.updateCart(id, productId, quantity);
   }
 
-  @Delete(':id')
-  @ResponseMessage('Delete a cart by id')
-  remove(
-    @Param('id') id: string
+
+  @Delete('clear-user-cart')
+  @UseGuards(JwtAuthGuard)
+  async clearUserCart(
+    @CurrentUser() user: any
   ) {
-    return this.cartsService.remove(id);
+    return this.cartsService.clearUserCart(user.userId);
+  }
+
+  // Xóa sản phẩm khỏi giỏ hàng của user hiện tại
+  @Delete('remove-product')
+  @UseGuards(JwtAuthGuard)
+  async removeProductFromCart(
+    @CurrentUser() user: any,
+    @Body('productId') productId: string
+  ) {
+    return this.cartsService.removeProductFromUserCart(user.userId, productId);
   }
 }

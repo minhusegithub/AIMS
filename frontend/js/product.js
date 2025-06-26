@@ -9,7 +9,7 @@ class ProductManager {
   async loadProducts() {
     const grid = document.getElementById("productGrid");
     try {
-      const res = await fetch(`${this.baseURL}/products?current=1&pageSize=10`);
+      const res = await fetch(`${this.baseURL}/products?current=1&pageSize=20`);
       const data = await res.json();
       const products = data.result;
       grid.innerHTML = "";
@@ -216,6 +216,7 @@ class ProductManager {
     
     if (result.success) {
       alert('Đã thêm vào giỏ hàng thành công!');
+      if (typeof updateCartBadge === 'function') updateCartBadge();
       this.closeProductModal();
     } else {
       alert(`Lỗi: ${result.error}`);
@@ -230,6 +231,7 @@ class ProductManager {
       
       if (result.success) {
         alert('Đã thêm vào giỏ hàng thành công!');
+        if (typeof updateCartBadge === 'function') updateCartBadge();
       } else {
         alert(`Lỗi: ${result.error}`);
       }
