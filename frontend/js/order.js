@@ -150,9 +150,30 @@ window.handleOrderConfirm = async function() {
 
       if (response.ok) {
         const orderResult = await response.json();
-        alert('Đặt hàng thành công! Mã đơn hàng: ' + orderResult._id);
-        // Chuyển về trang chính sau khi đặt hàng thành công
-        window.location.href = 'index.html';
+        if (paymentMethod === 'VNPAY') {
+          // Gọi API lấy link thanh toán VNPAY
+          const vnpayRes = await fetch(`${window.authManager.baseURL}/vnpay/create-payment-url?orderId=${orderResult._id}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${window.authManager.accessToken}`
+            },
+            credentials: 'include'
+          });
+          if (vnpayRes.ok) {
+            const vnpayData = await vnpayRes.json();
+            if (vnpayData.paymentUrl) {
+              window.location.href = vnpayData.paymentUrl;
+              return;
+            } else {
+              alert('Không lấy được link thanh toán VNPAY!');
+            }
+          } else {
+            alert('Không thể kết nối cổng VNPAY!');
+          }
+        } else {
+          alert('Đặt hàng thành công! Mã đơn hàng: ' + orderResult._id);
+          window.location.href = 'index.html';
+        }
       } else {
         let errorData = {};
         try {
