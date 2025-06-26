@@ -231,37 +231,7 @@ export class UsersService {
     }
   }
 
-  // Find all users
-  async findAll(currentPage: number, limit: number, qs: string) {
-    const { filter, sort, population } = aqp(qs);
-    delete filter.current;
-    delete filter.pageSize;
 
-    const offset = (+currentPage - 1) * (+limit);
-    const defaultLimit = +limit || 10;
-
-    const totalItems = await this.userModel.countDocuments(filter);
-    const totalPages = Math.ceil(totalItems / defaultLimit);
-
-    const result = await this.userModel
-      .find(filter)
-      .skip(offset)
-      .limit(defaultLimit)
-      .sort(sort as any)
-      .select('-password -refreshToken')
-      .populate(population)
-      .exec();
-
-    return {
-      meta: {
-        current: +currentPage,
-        pageSize: +limit,
-        pages: totalPages,
-        total: totalItems,
-      },
-      result,
-    };
-  }
 
   // Find one user by ID
   async findOne(id: string) {
@@ -335,58 +305,7 @@ export class UsersService {
     };
   }
 
-  // Update user (admin only)
-  async update(updateUserDto: UpdateUserDto) {
-    if (!mongoose.Types.ObjectId.isValid(updateUserDto._id)) {
-      throw new NotFoundException('ID người dùng không hợp lệ');
-    }
+  
 
-    // Check if user exists
-    const existingUser = await this.userModel.findById(updateUserDto._id);
-    if (!existingUser) {
-      throw new NotFoundException('Không tìm thấy người dùng');
-    }
-
-    // Check email uniqueness if email is being updated
-    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
-      const emailExists = await this.userModel.findOne({ email: updateUserDto.email });
-      if (emailExists) {
-        throw new BadRequestException(`Email: ${updateUserDto.email} đã tồn tại`);
-      }
-    }
-
-    const result = await this.userModel.updateOne(
-      { _id: updateUserDto._id },
-      { ...updateUserDto }
-    );
-
-    if (result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    return {
-      success: true,
-      message: 'Cập nhật người dùng thành công'
-    };
-  }
-
-  // Soft delete user
-  async remove(id: number) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('ID người dùng không hợp lệ');
-    }
-
-    const existingUser = await this.userModel.findById(id);
-    if (!existingUser) {
-      throw new NotFoundException('Không tìm thấy người dùng');
-    }
-
-    const result = await this.userModel.softDelete({ _id: id });
-    
-    return {
-      success: true,
-      message: 'Xóa người dùng thành công',
-      data: result
-    };
-  }
+  
 }

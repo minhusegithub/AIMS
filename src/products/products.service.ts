@@ -43,6 +43,36 @@ export class ProductsService {
     };
   }
 
+  // Create product by admin (tương tự updateProfile)
+  async createProductByAdmin(createProductDto: CreateProductDto) {
+    const {title, description, price, stock, thumbnail} = createProductDto;
+
+    // Validate input
+    if (price < 0) {
+      throw new BadRequestException('Giá sản phẩm không được âm');
+    }
+    if (stock < 0) {
+      throw new BadRequestException('Số lượng tồn kho không được âm');
+    }
+    if (!title || title.trim().length === 0) {
+      throw new BadRequestException('Tên sản phẩm không được để trống');
+    }
+
+    const newProduct = await this.productModel.create({
+      title: title.trim(),
+      description: description?.trim() || '',
+      price,
+      stock,
+      thumbnail: thumbnail || 'https://via.placeholder.com/200x180'
+    });
+    
+    return {
+      success: true,
+      message: 'Tạo sản phẩm thành công',
+      data: newProduct
+    };
+  }
+
   // get all products
   async findAll(currentPage: number, limit: number, qs: string) {
     const {filter, sort,  population} = aqp(qs);
@@ -90,8 +120,8 @@ export class ProductsService {
     };
   }
 
-  // update a product
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  // Update product by admin (tương tự updateProfile)
+  async updateProductByAdmin(id: string, updateProductDto: UpdateProductDto) {
     if(!mongoose.Types.ObjectId.isValid(id)){
       throw new NotFoundException('ID sản phẩm không hợp lệ');
     }
@@ -148,159 +178,19 @@ export class ProductsService {
     };
   }
 
-  // Update product stock
-  async updateStock(id: string, stock: number) {
+  // Delete product by admin (tương tự updateProfile)
+  async deleteProductByAdmin(id: string) {
     if(!mongoose.Types.ObjectId.isValid(id)){
       throw new NotFoundException('ID sản phẩm không hợp lệ');
     }
 
-    if (stock < 0) {
-      throw new BadRequestException('Số lượng tồn kho không được âm');
-    }
-
+    // Check if product exists
     const existingProduct = await this.productModel.findOne({_id: id});
     if(!existingProduct){
       throw new NotFoundException('Không tìm thấy sản phẩm');
     }
 
-    const result = await this.productModel.updateOne({_id: id}, { stock });
-    
-    if(result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    const updatedProduct = await this.productModel.findOne({_id: id});
-    
-    return {
-      success: true,
-      message: 'Cập nhật tồn kho thành công',
-      data: updatedProduct
-    };
-  }
-
-  // Update product price
-  async updatePrice(id: string, price: number) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      throw new NotFoundException('ID sản phẩm không hợp lệ');
-    }
-
-    if (price < 0) {
-      throw new BadRequestException('Giá sản phẩm không được âm');
-    }
-
-    const existingProduct = await this.productModel.findOne({_id: id});
-    if(!existingProduct){
-      throw new NotFoundException('Không tìm thấy sản phẩm');
-    }
-
-    const result = await this.productModel.updateOne({_id: id}, { price });
-    
-    if(result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    const updatedProduct = await this.productModel.findOne({_id: id});
-    
-    return {
-      success: true,
-      message: 'Cập nhật giá thành công',
-      data: updatedProduct
-    };
-  }
-
-  // Update product title
-  async updateTitle(id: string, title: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      throw new NotFoundException('ID sản phẩm không hợp lệ');
-    }
-
-    if (!title || title.trim().length === 0) {
-      throw new BadRequestException('Tên sản phẩm không được để trống');
-    }
-
-    const existingProduct = await this.productModel.findOne({_id: id});
-    if(!existingProduct){
-      throw new NotFoundException('Không tìm thấy sản phẩm');
-    }
-
-    const result = await this.productModel.updateOne({_id: id}, { title: title.trim() });
-    
-    if(result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    const updatedProduct = await this.productModel.findOne({_id: id});
-    
-    return {
-      success: true,
-      message: 'Cập nhật tên sản phẩm thành công',
-      data: updatedProduct
-    };
-  }
-
-  // Update product description
-  async updateDescription(id: string, description: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      throw new NotFoundException('ID sản phẩm không hợp lệ');
-    }
-
-    const existingProduct = await this.productModel.findOne({_id: id});
-    if(!existingProduct){
-      throw new NotFoundException('Không tìm thấy sản phẩm');
-    }
-
-    const result = await this.productModel.updateOne({_id: id}, { description: description?.trim() || '' });
-    
-    if(result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    const updatedProduct = await this.productModel.findOne({_id: id});
-    
-    return {
-      success: true,
-      message: 'Cập nhật mô tả thành công',
-      data: updatedProduct
-    };
-  }
-
-  // Update product thumbnail
-  async updateThumbnail(id: string, thumbnail: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      throw new NotFoundException('ID sản phẩm không hợp lệ');
-    }
-
-    const existingProduct = await this.productModel.findOne({_id: id});
-    if(!existingProduct){
-      throw new NotFoundException('Không tìm thấy sản phẩm');
-    }
-
-    const result = await this.productModel.updateOne({_id: id}, { thumbnail });
-    
-    if(result.modifiedCount === 0) {
-      throw new BadRequestException('Không có thay đổi nào được cập nhật');
-    }
-
-    const updatedProduct = await this.productModel.findOne({_id: id});
-    
-    return {
-      success: true,
-      message: 'Cập nhật hình ảnh thành công',
-      data: updatedProduct
-    };
-  }
-
-  // delete a product
-  async remove(id: string) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      throw new NotFoundException('ID sản phẩm không hợp lệ');
-    }
-
-    const existingProduct = await this.productModel.findOne({_id: id});
-    if(!existingProduct){
-      throw new NotFoundException('Không tìm thấy sản phẩm');
-    }
-
+    // Soft delete product
     const result = await this.productModel.softDelete({_id: id});
     
     return {
@@ -309,6 +199,8 @@ export class ProductsService {
       data: result
     };
   }
+
+
 
   // sort by price
   async sortByPrice(option: string) {
@@ -321,10 +213,10 @@ export class ProductsService {
     };
   }
 
-   // sort by price
+   // sort by title
   async sortByTitle(option: string) {
     // Chuyển đổi giá trị By về 1 hoặc -1
-    const sortValue = option === 'desc' ? -1 : 1;
+    const sortValue = option === 'desc' ? 1 : -1;
     const products = await this.productModel.find().sort({ title: sortValue });
     return {
       success: true,

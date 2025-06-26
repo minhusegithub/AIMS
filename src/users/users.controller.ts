@@ -78,7 +78,9 @@ export class UsersController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('Get current user profile')
-  async getProfile(@CurrentUser() user: any) {
+  async getProfile(
+    @CurrentUser() user: any
+  ) {
     return this.usersService.findOne(user.userId);
   }
 
@@ -93,17 +95,7 @@ export class UsersController {
     return this.usersService.updateProfile(user.userId, updateProfileDto);
   }
 
-  // get all users (admin only)
-  @Get()
-  @Roles(Role.Admin)
-  @ResponseMessage('Fetch users with pagination')
-  findAll(
-    @Query('current') currentPage: string,
-    @Query('pageSize') limit: string,
-    @Query() qs: string,
-  ) {
-    return this.usersService.findAll(+currentPage, +limit, qs);
-  }
+
 
   // get a user by id (admin only)
   @Get(':id')
@@ -113,19 +105,6 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  // update a user (admin only)
-  @Patch()
-  @Roles(Role.Admin)
-  @ResponseMessage('Update a user')
-  async update(@Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto);
-  }
+  
 
-  // delete a user (admin only)
-  @Delete(':id')
-  @Roles(Role.Admin)
-  @ResponseMessage('Delete a user')
-  remove(@Param('id') id: number) {
-    return this.usersService.remove(id);
-  }
 }
