@@ -18,14 +18,6 @@ export class CartsController {
     return this.cartsService.create(createCartDto);
   }
 
-  // @Get(':id')
-  // @ResponseMessage('Get a cart by id')
-  // findOne(
-  //   @Param('id') id: string
-  // ) {
-  //   return this.cartsService.findOne(id);
-  // }
-
   // Get current user's cart
   @Get('my-cart')
   @UseGuards(JwtAuthGuard)
@@ -55,23 +47,6 @@ export class CartsController {
     return this.cartsService.addProductToUserCart(user.userId, body.productId, body.quantity);
   }
 
-  @Patch('update-cart/:id')
-  updateCart(
-    @Param('id') id: string,
-    @Query('productId') productId: string,
-    @Query('quantity') quantity: number
-  ) {
-    return this.cartsService.updateCart(id, productId, quantity);
-  }
-
-
-  @Delete('clear-user-cart')
-  @UseGuards(JwtAuthGuard)
-  async clearUserCart(
-    @CurrentUser() user: any
-  ) {
-    return this.cartsService.clearUserCart(user.userId);
-  }
 
   // Xóa sản phẩm khỏi giỏ hàng của user hiện tại
   @Delete('remove-product')

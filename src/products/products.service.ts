@@ -232,53 +232,5 @@ export class ProductsService {
     };
   }
 
-  // Get products by stock status
-  async getProductsByStockStatus(status: 'in-stock' | 'out-of-stock' | 'low-stock') {
-    let filter: any = {};
-    
-    switch (status) {
-      case 'in-stock':
-        filter.stock = { $gt: 10 };
-        break;
-      case 'out-of-stock':
-        filter.stock = 0;
-        break;
-      case 'low-stock':
-        filter.stock = { $gt: 0, $lte: 10 };
-        break;
-      default:
-        throw new BadRequestException('Trạng thái tồn kho không hợp lệ');
-    }
-
-    const products = await this.productModel.find(filter);
-    
-    return {
-      success: true,
-      data: products,
-      total: products.length
-    };
-  }
-
-  // Get product statistics
-  async getProductStats() {
-    const totalProducts = await this.productModel.countDocuments();
-    const inStockProducts = await this.productModel.countDocuments({ stock: { $gt: 0 } });
-    const outOfStockProducts = await this.productModel.countDocuments({ stock: 0 });
-    const lowStockProducts = await this.productModel.countDocuments({ stock: { $gt: 0, $lte: 10 } });
-
-    const avgPrice = await this.productModel.aggregate([
-      { $group: { _id: null, avgPrice: { $avg: '$price' } } }
-    ]);
-
-    return {
-      success: true,
-      data: {
-        totalProducts,
-        inStockProducts,
-        outOfStockProducts,
-        lowStockProducts,
-        averagePrice: avgPrice[0]?.avgPrice || 0
-      }
-    };
-  }
+  
 }

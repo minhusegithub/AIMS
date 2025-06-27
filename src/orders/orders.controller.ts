@@ -27,18 +27,11 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
-  @Get()
-  @Roles(Role.Admin)
-  findAll(
-    @Query('current') currentPage: string,
-    @Query('pageSize') limit: string,
-    @Query() qs: string,
-  ) {
-    return this.ordersService.findAll(+currentPage, +limit, qs);
-  }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param('id') id: string
+  ) {
     return this.ordersService.findOne(id);
   }
 
@@ -69,9 +62,5 @@ export class OrdersController {
     return this.ordersService.placeRushOrder(id, placeRushOrder);
   }
 
-  @Delete(':id')
-  @Roles(Role.Admin)
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
-  }
+  
 }

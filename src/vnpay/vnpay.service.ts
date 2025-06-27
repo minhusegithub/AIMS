@@ -78,13 +78,17 @@ export class VnpayService {
   handleReturnUrl(query: Record<string, string>) {
     if(query.vnp_ResponseCode === "00"){ // Nếu thành công
       return { success: true, message: 'Thanh toán thành công!' , data: {
+        
         "Số tiền thanh toán": (Number(query.vnp_Amount) / 100),
         "Mã đơn hàng": query.vnp_TxnRef , 
         "Ngày thanh toán": query.vnp_CreateDate,
 
       }};
     }else{
-      return { success: false, message: 'Thanh toán thất bại!' , data: query};
+      return { success: false,
+        message: 'Thanh toán thất bại!' ,
+        data: { query}
+      };
     }
     
     

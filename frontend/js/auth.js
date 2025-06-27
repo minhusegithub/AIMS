@@ -320,23 +320,7 @@ class AuthManager {
       });
       console.log(response);
 
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   return { success: true, data };
-      // } else {
-      //   let errorData = {};
-      //   try {
-      //     errorData = await response.json();
-      //   } catch (e) {
-      //     errorData = { message: 'Lỗi không xác định từ server' };
-      //   }
-      //   return { success: false, error: errorData.message || 'Thêm vào giỏ hàng thất bại' };
-      // }
-    // } 
-    // catch (error) {
-    //   console.error('Lỗi khi thêm vào giỏ hàng:', error);
-    //   return { success: false, error: error?.message || 'Lỗi kết nối' };
-    // }
+
   }
 
   // Function để chỉnh sửa sản phẩm (cho admin)
