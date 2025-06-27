@@ -52,7 +52,15 @@ export class CartsService {
     return cart;
   }
 
-
+   // Xóa cart của user khi đăng xuất
+   async clearUserCart(userId: string) {
+    const cart = await this.cartModel.findOne({ userId });
+    if (cart) {
+      await this.cartModel.softDelete({ _id: cart._id });
+    }
+    return { message: 'Cart cleared successfully' };
+  }
+  
   // add product to user's cart
   async addProductToUserCart(userId: string, productId: string, quantity: number) {
     // Kiểm tra sản phẩm có tồn tại không
