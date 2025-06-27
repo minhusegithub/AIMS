@@ -76,8 +76,9 @@ export class VnpayService {
   }
 
   async handleReturnUrl(query: Record<string, string>) {
+    const orderId = query.vnp_OrderInfo;
     if(query.vnp_ResponseCode === "00"){ // Nếu thành công
-      const orderId = query.vnp_OrderInfo;
+     
       const order = await this.orderService.findOne(orderId);
       
       // Kiểm tra nếu order không tồn tại
@@ -95,6 +96,7 @@ export class VnpayService {
       return { 
         message: 'Thanh toán thành công!',
         data: {
+          "Về trang chủ": "http://127.0.0.1:5500/frontend/index.html",
           "Mã đơn hàng": orderId,
           "Người mua": user.name,
           "Email người mua": user.email,
@@ -106,11 +108,15 @@ export class VnpayService {
           "Tổng tiền đơn hàng": order.totalPrice
         }
       };
-    }else{
+    }
+    else{
+      // thay đổi trạng thái đơn hàng thành failed
+      await this.orderService.updateStatus(orderId, 'failed');
+      // Trả về thông tin lỗi
       return { 
         success: false,
-        message: 'Thanh toán thất bại!' ,
-        data: { 
+        message: 'Thanh toán thất bại!',
+        data: {
           "Mã lỗi": query.vnp_ResponseCode,
           "Thông tin lỗi": query.vnp_Message || "Không có thông tin lỗi"
         }

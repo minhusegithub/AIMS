@@ -60,6 +60,24 @@ export class CartsService {
     }
     return { message: 'Cart cleared successfully' };
   }
+
+  // Làm trống giỏ hàng của user (xóa tất cả sản phẩm)
+  async clearUserCartItems(userId: string) {
+    const cart = await this.cartModel.findOne({ userId: userId, isDeleted: false });
+    if (!cart) {
+      return { success: false, message: 'Cart not found' };
+    }
+    
+    // Làm trống mảng products
+    cart.products = [];
+    await cart.save();
+    
+    return { 
+      success: true, 
+      message: 'Đã làm trống giỏ hàng thành công',
+      data: cart 
+    };
+  }
   
   // add product to user's cart
   async addProductToUserCart(userId: string, productId: string, quantity: number) {

@@ -51,7 +51,33 @@ window.handleOrderConfirm = async function() {
           alert('Đặt hàng thành công! Mã đơn hàng: ' + orderResult._id);
           window.location.href = 'index.html';
         }
-      } 
+      }
+      // Làm trống cart sau khi đặt hàng 
+      try {
+        // Gọi API để xóa tất cả sản phẩm trong cart
+        const clearCartResponse = await fetch(`${window.authManager.baseURL}/carts/clear`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${window.authManager.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+
+        if (clearCartResponse.ok) {
+          console.log('Đã làm trống giỏ hàng thành công');
+          // Cập nhật số lượng sản phẩm trong cart icon (nếu có)
+          const cartCountElement = document.querySelector('.cart-count');
+          if (cartCountElement) {
+            cartCountElement.textContent = '0';
+          }
+        } else {
+          console.warn('Không thể làm trống giỏ hàng:', clearCartResponse.status);
+        }
+      } catch (clearCartError) {
+        console.error('Lỗi khi làm trống giỏ hàng:', clearCartError);
+        
+      }
     } catch (error) {
       console.error('Lỗi khi tạo order:', error);
       alert('Lỗi kết nối khi đặt hàng');
