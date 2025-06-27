@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -76,6 +76,12 @@ export class CartsService {
         userId,
         products: []
       });
+    }
+
+    // Kiểm tra stock của sản phẩm
+    if (product.stock < quantity) {
+      throw new BadRequestException('Số lượng sản phẩm không đủ');
+      return;
     }
 
     // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
