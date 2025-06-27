@@ -21,18 +21,8 @@ import { JwtAuthGuard } from '../users/jwt-auth.guard';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  // Create a new product
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  @ResponseMessage('Tạo sản phẩm thành công')
-  create(
-    @Body() createProductDto: CreateProductDto
-  ) {
-    return this.productsService.create(createProductDto);
-  }
 
-  // Create product by admin (tương tự updateProfile)
+  // Create product by admin 
   @Post('admin/create')
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
@@ -61,7 +51,7 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  // Update product by admin (tương tự updateProfile)
+  // Update product by admin 
   @Patch('admin/update/:id')
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
@@ -109,19 +99,5 @@ export class ProductsController {
     return this.productsService.searchByTitle(title);
   }
 
-  // Get products by stock status
-  @Get('stock/:status')
-  getProductsByStockStatus(
-    @Param('status') status: 'in-stock' | 'out-of-stock' | 'low-stock',
-  ) {
-    return this.productsService.getProductsByStockStatus(status);
-  }
-
-  // Get product statistics
-  @Get('stats/overview')
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
-  getProductStats() {
-    return this.productsService.getProductStats();
-  }
+ 
 }
