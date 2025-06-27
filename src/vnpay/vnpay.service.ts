@@ -55,7 +55,7 @@ export class VnpayService {
         vnp_Amount: order.totalPrice * 1000,
         vnp_IpAddr: "127.0.0.1",
         vnp_TxnRef: orderId + Date.now(), // là duy nhất
-        vnp_OrderInfo: `Thanh toán đơn hàng ${orderId}`,
+        vnp_OrderInfo: `${orderId}`,
         vnp_OrderType: ProductCode.Other,
         vnp_ReturnUrl: this.configService.get<string>('VNPAY_RETURN_URL'),
         vnp_Locale: VnpLocale.VN,
@@ -75,23 +75,47 @@ export class VnpayService {
 
   }
 
-  handleReturnUrl(query: Record<string, string>) {
+  async handleReturnUrl(query: Record<string, string>) {
     if(query.vnp_ResponseCode === "00"){ // Nếu thành công
-      return { success: true, message: 'Thanh toán thành công!' , data: {
-        
-        "Số tiền thanh toán": (Number(query.vnp_Amount) / 100),
-        "Mã đơn hàng": query.vnp_TxnRef , 
-        "Ngày thanh toán": query.vnp_CreateDate,
+      const orderId = query.vnp_OrderInfo;
+      const order = await this.orderService.findOne(orderId);
+      
+      // Kiểm tra nếu order không tồn tại
+      if (typeof order === 'string') {
+        return { 
+          success: false,
+          message: 'Không tìm thấy đơn hàng!' 
+        };
+      }
 
-      }};
+      // Lấy thông tin người mua từ cart đã được populate
+      const cart = order.cartId as any;
+      const user = cart.userId;
+
+      return { 
+        message: 'Thanh toán thành công!',
+        data: {
+          "Mã đơn hàng": orderId,
+          "Người mua": user.name,
+          "Email người mua": user.email,
+          "Ngày thanh toán": query.vnp_CreateDate,
+          "Trạng thái đơn hàng": order.status,
+          "Phương thức thanh toán": order.paymentMethod,
+          "Đặt hàng gấp": order.placeRushOrder ? "Có" : "Không",
+          "Ngày tạo đơn hàng": this.formatDate(order.createdAt),
+          "Tổng tiền đơn hàng": order.totalPrice
+        }
+      };
     }else{
-      return { success: false,
+      return { 
+        success: false,
         message: 'Thanh toán thất bại!' ,
-        data: { query}
+        data: { 
+          "Mã lỗi": query.vnp_ResponseCode,
+          "Thông tin lỗi": query.vnp_Message || "Không có thông tin lỗi"
+        }
       };
     }
-    
-    
   }
 
   private formatDate(date: Date): string {
@@ -101,6 +125,6 @@ export class VnpayService {
     const hh = date.getHours().toString().padStart(2, '0');
     const mm = date.getMinutes().toString().padStart(2, '0');
     const ss = date.getSeconds().toString().padStart(2, '0');
-    return `${yyyy}${MM}${dd}${hh}${mm}${ss}`;
+    return `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}`;
   }
 }

@@ -4,7 +4,7 @@ window.handleOrderConfirm = async function() {
     try {
       // Lấy thông tin cart hiện tại
       const cartResult = await window.authManager.getCart();
-
+      const cart = cartResult.data;
       // Lấy giá trị từ form
       const placeRushOrder = document.getElementById('rushOrder').checked;
       const paymentMethod = document.getElementById('paymentMethod').value;
