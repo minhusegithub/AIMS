@@ -193,28 +193,36 @@ export class ProductsService {
 
 
 
-  // sort by price
-  async sortByPrice(option: string) {
-    // Chuyển đổi giá trị By về 1 hoặc -1
-    const sortValue = option === 'desc' ? -1 : 1;
-    const products = await this.productModel.find().sort({price: sortValue});
-    return {
-      success: true,
-      data: products
-    };
-  }
+  //sort by price _ 2
+async sortByPrice(option: string, currentPage: number, pageSize: number) {
+  const sortValue = option === 'desc' ? -1 : 1;
 
-   // sort by title
-  async sortByTitle(option: string) {
-    // Chuyển đổi giá trị By về 1 hoặc -1
-    const sortValue = option === 'desc' ? 1 : -1;
-    const products = await this.productModel.find().sort({ title: sortValue });
-    return {
-      success: true,
-      data: products
-    };
-  }
+  const page = currentPage > 0 ? currentPage : 1;
+  const limit = pageSize > 0 ? pageSize : 10;
+  const skip = (page - 1) * limit;
 
+  // Tổng số sản phẩm
+  const totalItems = await this.productModel.countDocuments();
+
+  const totalPages = Math.ceil(totalItems / limit);
+
+  const products = await this.productModel.find()
+    .sort({ price: sortValue })
+    .skip(skip)
+    .limit(limit);
+
+  return {
+    meta: {
+      current: page,
+      pageSize: limit,
+      total: totalItems,
+      totalPages: totalPages
+    },
+    data: products
+  };
+}
+
+   
   // search by title
   async searchByTitle(title: string) {
     if (!title || title.trim().length === 0) {
