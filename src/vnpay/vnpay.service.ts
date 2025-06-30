@@ -76,44 +76,49 @@ export class VnpayService {
   }
 
   async handleReturnUrl(query: Record<string, string>) {
+    const orderId = query.vnp_OrderInfo;
     if(query.vnp_ResponseCode === "00"){ // Nếu thành công
-      const orderId = query.vnp_OrderInfo;
+     
       const order = await this.orderService.findOne(orderId);
       
       // Kiểm tra nếu order không tồn tại
       if (typeof order === 'string') {
         return { 
-          success: false,
-          message: 'Không tìm thấy đơn hàng!' 
+          redirectUrl: `http://127.0.0.1:5500/frontend/vnpay-return.html?success=false&message=${encodeURIComponent('Không tìm thấy đơn hàng!')}`
         };
       }
 
       // Lấy thông tin người mua từ cart đã được populate
       const cart = order.cartId as any;
       const user = cart.userId;
-
-      return { 
-        message: 'Thanh toán thành công!',
-        data: {
-          "Mã đơn hàng": orderId,
-          "Người mua": user.name,
-          "Email người mua": user.email,
-          "Ngày thanh toán": query.vnp_CreateDate,
-          "Trạng thái đơn hàng": order.status,
-          "Phương thức thanh toán": order.paymentMethod,
-          "Đặt hàng gấp": order.placeRushOrder ? "Có" : "Không",
-          "Ngày tạo đơn hàng": this.formatDate(order.createdAt),
-          "Tổng tiền đơn hàng": order.totalPrice
-        }
+      
+      const orderData = {
+        "Mã đơn hàng": orderId,
+        "Người mua": user.name,
+        "Email người mua": user.email,
+        "Ngày thanh toán": query.vnp_CreateDate,
+        "Trạng thái đơn hàng": order.status,
+        "Phương thức thanh toán": order.paymentMethod,
+        "Đặt hàng gấp": order.placeRushOrder ? "Có" : "Không",
+        "Ngày tạo đơn hàng": this.formatDate(order.createdAt),
+        "Tổng tiền đơn hàng": order.totalPrice
       };
-    }else{
+      
       return { 
-        success: false,
-        message: 'Thanh toán thất bại!' ,
-        data: { 
-          "Mã lỗi": query.vnp_ResponseCode,
-          "Thông tin lỗi": query.vnp_Message || "Không có thông tin lỗi"
-        }
+        redirectUrl: `http://127.0.0.1:5500/frontend/vnpay-return.html?success=true&message=${encodeURIComponent('Thanh toán thành công!')}&data=${encodeURIComponent(JSON.stringify(orderData))}`
+      };
+    }
+    else{ 
+      // thay đổi trạng thái đơn hàng thành failed
+      await this.orderService.updateStatus(orderId, 'failed');
+      
+      const errorData = {
+        "Mã lỗi": query.vnp_ResponseCode,
+        "Thông tin lỗi": query.vnp_Message || "Không có thông tin lỗi"
+      };
+      
+      return { 
+        redirectUrl: `http://127.0.0.1:5500/frontend/vnpay-return.html?success=false&message=${encodeURIComponent('Thanh toán thất bại!')}&data=${encodeURIComponent(JSON.stringify(errorData))}`
       };
     }
   }

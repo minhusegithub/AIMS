@@ -5,7 +5,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { CartsService } from 'src/carts/carts.service';
-import { ProductsService } from 'src/products/products.service';
 import { Cart } from 'src/carts/schemas/cart.schema';
 import { Product } from 'src/products/schemas/product.schema';
 import mongoose from 'mongoose';
@@ -16,8 +15,8 @@ export class OrdersService {
   
 
   constructor(
-    @InjectModel(Order.name) private orderModel: SoftDeleteModel<OrderDocument>,
-    private cartsService: CartsService
+    @InjectModel(Order.name) private readonly orderModel: SoftDeleteModel<OrderDocument>,
+    private readonly cartsService: CartsService
 
     
   ) {}
@@ -90,18 +89,12 @@ export class OrdersService {
       });
     
     if (!order) {
-      return "not found order xxx";
+      return "not found order";
     }
 
-    
-    const cart = order.cartId as any;
-    const newTotalPrice = this.calculateTotalPrice(cart, order.placeRushOrder);
-
-    // Chỉ cập nhật nếu totalPrice thay đổi
-    if (order.totalPrice !== newTotalPrice) {
-      order.totalPrice = newTotalPrice;
-      await order.save();
-    }
+    // Chỉ tính lại totalPrice nếu đơn hàng vẫn đang pending
+    // Để tránh mất thông tin giá trị đơn hàng sau khi thanh toán
+  
 
     return order;
   }

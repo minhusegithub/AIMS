@@ -57,4 +57,22 @@ export class CartsController {
   ) {
     return this.cartsService.removeProductFromUserCart(user.userId, productId);
   }
+
+  // Làm trống giỏ hàng của user hiện tại
+  @Patch('clear')
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Clear user cart')
+  async clearMyCart(
+    @CurrentUser() user: any
+  ) {
+    try {
+      const result = await this.cartsService.clearUserCartItems(user.userId);
+      return result;
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error?.message || 'Không thể làm trống giỏ hàng' 
+      };
+    }
+  }
 }
