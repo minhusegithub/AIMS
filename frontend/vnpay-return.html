@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả thanh toán VNPay</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Kết quả thanh toán</h1>
+                <p class="text-gray-600">Thông tin chi tiết về giao dịch của bạn</p>
+            </div>
+
+            <!-- Result Card -->
+            <div id="resultCard" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div id="loading" class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Đang xử lý thông tin thanh toán...</p>
+                </div>
+                
+                <div id="successResult" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-green-600 mb-2">Thanh toán thành công!</h2>
+                        <p class="text-gray-600">Giao dịch của bạn đã được xử lý thành công</p>
+                    </div>
+                    
+                    <div id="successData" class="space-y-3">
+                        <!-- Data will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div id="errorResult" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-red-600 mb-2">Thanh toán thất bại!</h2>
+                        <p class="text-gray-600">Có lỗi xảy ra trong quá trình xử lý giao dịch</p>
+                    </div>
+                    
+                    <div id="errorData" class="space-y-3">
+                        <!-- Error data will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="window.location.href='index.html'" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Về trang chủ
+                </button>
+                
+               
+            </div>
+        </div>
+    </div>
+
+    <script>
+       
+       
+
+        // Lấy thông tin từ URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const message = urlParams.get('message');
+        const data = urlParams.get('data');
+        const error = urlParams.get('error');
+
+        // Hiển thị kết quả sau khi trang load
+        window.addEventListener('DOMContentLoaded', function() {
+            const loading = document.getElementById('loading');
+            const successResult = document.getElementById('successResult');
+            const errorResult = document.getElementById('errorResult');
+            const successData = document.getElementById('successData');
+            const errorData = document.getElementById('errorData');
+
+            // Ẩn loading
+            loading.classList.add('hidden');
+
+            if (success === 'true' || (!error && success !== 'false')) {
+                // Hiển thị kết quả thành công
+                successResult.classList.remove('hidden');
+                
+                if (data) {
+                    try {
+                        const orderData = JSON.parse(decodeURIComponent(data));
+                        Object.entries(orderData).forEach(([key, value]) => {
+                            const dataItem = document.createElement('div');
+                            dataItem.className = 'flex justify-between items-center py-2 border-b border-gray-200';
+                            dataItem.innerHTML = `
+                                <span class="font-medium text-gray-700">${key}:</span>
+                                <span class="text-gray-900">${value}</span>
+                            `;
+                            successData.appendChild(dataItem);
+                        });
+                    } catch (e) {
+                        console.error('Error parsing data:', e);
+                    }
+                }
+                
+                
+            } else {
+                // Hiển thị kết quả lỗi
+                errorResult.classList.remove('hidden');
+                
+                if (data) {
+                    try {
+                        const errorInfo = JSON.parse(decodeURIComponent(data));
+                        Object.entries(errorInfo).forEach(([key, value]) => {
+                            const dataItem = document.createElement('div');
+                            dataItem.className = 'flex justify-between items-center py-2 border-b border-gray-200';
+                            dataItem.innerHTML = `
+                                <span class="font-medium text-gray-700">${key}:</span>
+                                <span class="text-red-600">${value}</span>
+                            `;
+                            errorData.appendChild(dataItem);
+                        });
+                    } catch (e) {
+                        console.error('Error parsing error data:', e);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
