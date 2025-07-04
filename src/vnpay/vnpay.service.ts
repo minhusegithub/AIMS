@@ -95,6 +95,7 @@ export class VnpayService {
       const orderData = {
         "Mã đơn hàng": orderId,
         "Người mua": user.name,
+        "Sản phẩm và số lượng": cart.products.map(product => `${product.productId.title} - ${product.quantity}`),
         "Email người mua": user.email,
         "Ngày thanh toán": query.vnp_CreateDate,
         "Trạng thái đơn hàng": order.status,

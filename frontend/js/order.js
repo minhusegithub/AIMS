@@ -44,8 +44,7 @@ window.handleOrderConfirm = async function() {
             if (vnpayData.paymentUrl) {
               // Không làm trống giỏ hàng ngay, để VNPay có thể xử lý
               window.location.href = vnpayData.paymentUrl;  
-              await clearCart();
-              return;
+        
             }
           }
     
