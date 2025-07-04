@@ -99,14 +99,6 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found order";
-    }
-    const order = await this.orderModel.updateOne({_id: id}, updateOrderDto);
-    return order;
-  }
-
 
   async updateStatus(id: string, status: string) {
     if(!mongoose.Types.ObjectId.isValid(id)){
@@ -117,13 +109,6 @@ export class OrdersService {
   }
 
 
-  async placeRushOrder(id: string, placeRushOrder: boolean) {
-    if(!mongoose.Types.ObjectId.isValid(id)){
-      return "not found order";
-    }
-    const order = await this.orderModel.updateOne({_id: id}, {placeRushOrder: placeRushOrder});
-    return order;
-  }
   
   
 }
