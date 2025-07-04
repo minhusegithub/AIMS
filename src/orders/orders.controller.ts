@@ -19,6 +19,7 @@ import { Role } from 'src/roles/roles.enum';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  // Tạo mới orer
   @Post()
   @Roles(Role.Customer)
   create(
@@ -35,15 +36,8 @@ export class OrdersController {
     return this.ordersService.findOne(id);
   }
 
-  @Patch(':id')
-  @Roles(Role.Admin)
-  update(
-    @Param('id') id: string,
-    @Body() updateOrderDto: UpdateOrderDto,
-  ) {
-    return this.ordersService.update(id, updateOrderDto);
-  }
-
+ 
+  //Cập nhật trạng thái order
   @Patch('update-status/:id')
   @Roles(Role.Admin)
   updateStatus(
@@ -53,14 +47,7 @@ export class OrdersController {
     return this.ordersService.updateStatus(id, status);
   }
 
-  @Patch('place-rush-order/:id')
-  @Roles(Role.Customer)
-  placeRushOrder(
-    @Param('id') id: string,
-    @Query('placeRushOrder') placeRushOrder: boolean,
-  ) {
-    return this.ordersService.placeRushOrder(id, placeRushOrder);
-  }
+ 
 
   
 }
