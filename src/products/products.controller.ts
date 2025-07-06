@@ -77,18 +77,19 @@ export class ProductsController {
 
   // Get products sort by price with option
   @Post('sort-by-price')
-sortByPrice(
-  @Query('option') option: string,
-  @Query('current') currentPage: string,
-  @Query('pageSize') pageSize: string,
-) {
-  return this.productsService.sortByPrice(
-    option,
-    +currentPage,
-    +pageSize
-  );
-}
+  sortByPrice(
+    @Query('option') option: string,
+  ) {
+    return this.productsService.sortByPrice(option);
+  }
 
+  // Get products sort by title with option
+  // @Post('sort-by-title')
+  // sortByTitle(
+  //   @Query('option') option: string,
+  // ) {
+  //   return this.productsService.sortByTitle(option);
+  // }
   
 
   // Search products by title
